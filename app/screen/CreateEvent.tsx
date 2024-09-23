@@ -12,6 +12,7 @@ interface Event {
     date: string;
     time: string;
     location: string;
+    sportsType: string;
     availablePlaces: number;
     userId: string;
 }
@@ -24,6 +25,7 @@ const CreateEvent = () => {
     const [date, setDate] = useState<Date | undefined>(undefined);
     const [time, setTime] = useState<Date | undefined>(undefined);
     const [location, setLocation] = useState('');
+    const [sportType, setSportType] = useState('');
     const [spots, setSpots] = useState('');
 
     // For displaying the date picker
@@ -50,6 +52,7 @@ const CreateEvent = () => {
                 date: formattedDate,
                 time: formattedTime,
                 location,
+                sportType,
                 spots: parseInt(spots),
                 takenSpots: 0,
             });
@@ -62,6 +65,7 @@ const CreateEvent = () => {
             setDate(undefined);
             setTime(undefined);
             setLocation('');
+            setSportType('');
             setSpots('');
         } catch (error) {
             console.error('Error adding event: ', error);
@@ -124,6 +128,14 @@ const CreateEvent = () => {
                 value={location}
                 onChangeText={setLocation}
                 placeholder="Enter event location"
+            />
+
+            <Text style={styles.label}>Sport</Text>
+            <TextInput
+                style={styles.input}
+                value={sportType}
+                onChangeText={setSportType}
+                placeholder="Enter the sport"
             />
 
             <Text style={styles.label}>Available Places</Text>

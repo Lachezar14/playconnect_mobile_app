@@ -18,13 +18,19 @@ interface Event {
 type RootStackParamList = {
     Events: undefined;
     EventDetails: { event: Event };
+    JoinedEventsDetails: { event: Event }; // Define the joined event details page
 };
 
 // Define the type for navigation prop
 type EventCardNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EventDetails'>;
 
 // Card component to display event details
-const EventCard: React.FC<{ event: Event }> = ({ event }) => {
+interface EventCardProps {
+    event: Event;
+    targetPage: 'EventDetails' | 'JoinedEventsDetails'; // Specify the target page
+}
+
+const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     const navigation = useNavigation<EventCardNavigationProp>();
 
     // Combine the date and time into a single Date object
@@ -35,11 +41,11 @@ const EventCard: React.FC<{ event: Event }> = ({ event }) => {
     const formattedDay = eventDateTime.toLocaleDateString([], { weekday: 'long' });
 
     return (
-        <TouchableOpacity onPress={() => navigation.navigate('EventDetails', { event })}>
+        <TouchableOpacity onPress={() => navigation.navigate(targetPage, { event })}>
             <View style={styles.card}>
                 <Image
                     source={{
-                        uri: 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+                        uri: 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
                     }} // Replace with dynamic event image URL
                     style={styles.image}
                 />

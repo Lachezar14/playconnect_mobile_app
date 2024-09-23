@@ -4,6 +4,8 @@ import {FIRESTORE_DB} from "../../firebaseConfig";
 import { collection, getDocs } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
 import EventCard from "../components/EventCard";
+import SearchFilter from "../components/SearchFilter";
+import SportFilter from "../components/SportFilter";
 
 // Event type definition
 interface Event {
@@ -13,13 +15,16 @@ interface Event {
     time: string;
     location: string;
     availablePlaces: number;
+    sportType: string;
     userId: string;
 }
 
 // Main component to render the list of events
 const Events = () => {
     const [events, setEvents] = useState<Event[]>([]);
+    const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [sports, setSports] = useState<string[]>([]);
 
     // Fetch events from Firestore
     const fetchEvents = async () => {
@@ -31,7 +36,11 @@ const Events = () => {
                 ...doc.data(),
             })) as Event[];
             setEvents(eventList);
-            console.log("Events: ", eventList);
+            setFilteredEvents(eventList); // Initialize with full event list
+
+            // Extract unique sports from events
+            const uniqueSports = Array.from(new Set(eventList.map(event => event.sportType)));
+            setSports(['All', ...uniqueSports]);
         } catch (error) {
             console.error("Error fetching events: ", error);
         } finally {
@@ -45,6 +54,41 @@ const Events = () => {
         }, [])
     );
 
+    // Search and Filter Logic
+    const handleSearch = (title: string) => {
+        const filtered = events.filter(event =>
+            event.title.toLowerCase().includes(title.toLowerCase())
+        );
+        setFilteredEvents(filtered);
+    };
+
+    const handleFilterApply = (startDate: string, endDate: string) => {
+        const filtered = events.filter((event) => {
+            const eventDate = new Date(event.date);
+            const start = startDate ? new Date(startDate) : null;
+            const end = endDate ? new Date(endDate) : null;
+
+            const isWithinDateRange =
+                (!start || eventDate >= start) &&
+                (!end || eventDate <= end);
+
+            //const matchesSport = sport ? event.title.toLowerCase().includes(sport.toLowerCase()) : true;
+
+            return isWithinDateRange;
+        });
+        setFilteredEvents(filtered);
+    };
+
+    const handleSportSelect = (sport: string | null) => {
+        if (sport === null) {
+            setFilteredEvents(events);
+        } else {
+            const filtered = events.filter(event =>
+                event.sportType.toLowerCase() === sport.toLowerCase()
+            );
+            setFilteredEvents(filtered);
+        }
+    };
 
     if (loading) {
         return (
@@ -57,9 +101,16 @@ const Events = () => {
 
     return (
         <View style={styles.container}>
+            <SearchFilter onSearch={handleSearch} onFilterApply={handleFilterApply} />
+            <SportFilter sports={sports} onSportSelect={handleSportSelect} />
             <FlatList
-                data={events}
-                renderItem={({ item }) => <EventCard event={item} />}
+                data={filteredEvents}
+                renderItem={({ item }) => (
+                    <EventCard
+                        event={item}
+                        targetPage="EventDetails"  // Specify the target page for events
+                    />
+                )}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
             />

@@ -86,7 +86,12 @@ const JoinedEvents = () => {
             {joinedEvents.length > 0 ? (
                 <FlatList
                     data={joinedEvents}
-                    renderItem={({ item }) => <EventCard event={item} />}  // Use EventCard component
+                    renderItem={({ item }) => (
+                        <EventCard
+                            event={item}
+                            targetPage="JoinedEventsDetails"  // Specify the target page for joined events
+                        />
+                    )}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
                 />

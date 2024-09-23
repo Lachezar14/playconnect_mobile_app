@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Button} from 'react-native';
-import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import { addDoc, collection, deleteDoc, doc, query, where, getDocs, runTransaction }  from "firebase/firestore";
-import {FIRESTORE_DB} from "../../firebaseConfig";
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { addDoc, collection, updateDoc, doc, query, where, getDocs, runTransaction } from "firebase/firestore";
+import { FIRESTORE_DB } from "../../firebaseConfig";
 import { useAuth } from '../context/AuthContext';
 
 // Event type definition
@@ -26,25 +26,25 @@ interface Participant {
 
 // Define the types for the route params
 type RootStackParamList = {
-    EventDetails: { event: Event }; // Replace 'any' with the appropriate type for event
+    JoinedEventsDetails: { event: Event };
 };
 
 // Define props using NativeStackScreenProps
-type Props = NativeStackScreenProps<RootStackParamList, 'EventDetails'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'JoinedEventsDetails'>;
 
-const EventDetails: React.FC<Props> = ({ route, navigation }) => {
-    const { user } = useAuth(); // Get the user object from the AuthContext
-    const { event } = route.params; // Get event details passed through navigation
-    const [isJoined, setIsJoined] = useState<boolean>(false); // State to track if the user has joined
-    const [loading, setLoading] = useState<boolean>(true); // State to track loading
-    const [participants, setParticipants] = useState<Participant[]>([]); // For real participant data
+const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
+    const { user } = useAuth();
+    const { event } = route.params;
+    const [isJoined, setIsJoined] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [checkedIn, setCheckedIn] = useState<boolean>(false);
 
-    const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
+    const availableSpots = event.spots - (event.takenSpots || 0);
 
     // Fetch participants and their user details
     const fetchParticipants = async () => {
         try {
-            // Step 1: Get all participants from `eventParticipants` table based on `eventId`
             const eventParticipantsQuery = query(
                 collection(FIRESTORE_DB, 'eventParticipants'),
                 where('eventId', '==', event.id)
@@ -55,32 +55,31 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                 const data = docSnapshot.data();
                 const userId = data.userId;
 
-                // Step 2: Fetch the corresponding user details from the `users` collection
                 const userQuery = query(
                     collection(FIRESTORE_DB, 'users'),
                     where('userId', '==', userId)
                 );
                 const userSnapshot = await getDocs(userQuery);
 
-                // Assuming each `userQuery` has only one user
                 if (!userSnapshot.empty) {
                     const userData = userSnapshot.docs[0].data();
-                    return { id: userId, firstName: userData.firstName, lastName: userData.lastName } as Participant;
+                    return {
+                        id: docSnapshot.id,
+                        firstName: userData.firstName,
+                        lastName: userData.lastName
+                    } as Participant;
                 }
                 return null;
             });
 
-            // Step 3: Resolve all promises and filter out null values
             const participantList = (await Promise.all(participantPromises)).filter(Boolean) as Participant[];
             setParticipants(participantList);
-            console.log('Participants: ', participantList);
         } catch (error) {
             console.error('Error fetching participants: ', error);
             Alert.alert('Error fetching participants', 'Please try again later.');
         }
     };
 
-    // Check if the user has joined the event
     const checkIfJoined = async () => {
         try {
             const eventParticipantsQuery = query(
@@ -89,44 +88,34 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                 where('eventId', '==', event.id)
             );
             const querySnapshot = await getDocs(eventParticipantsQuery);
-
-            // If the user is found in the participants list
             setIsJoined(!querySnapshot.empty);
         } catch (error) {
             console.error('Error checking participation: ', error);
         } finally {
-            setLoading(false); // Set loading to false once the check is done
+            setLoading(false);
         }
     };
 
     const eventRegister = async () => {
         // Implement event registration logic here
         try {
-            // Start a Firestore transaction
             await runTransaction(FIRESTORE_DB, async (transaction) => {
-                // Step 1: Get a reference to the event document in the events collection
                 const eventDocRef = doc(FIRESTORE_DB, 'events', event.id);
-
-                // Step 2: Read the current event data inside the transaction
                 const eventDocSnapshot = await transaction.get(eventDocRef);
 
                 if (!eventDocSnapshot.exists()) {
                     throw new Error('Event does not exist!');
                 }
 
-                // Get current data
                 const currentEventData = eventDocSnapshot.data();
-
-                // Check if there are available places
                 const availableSpots = currentEventData.spots;
-                const takenSpots = currentEventData.takenSpots || 0; // Default to 0 if it doesn't exist yet
+                const takenSpots = currentEventData.takenSpots || 0;
                 const totalSpots = availableSpots - takenSpots;
 
                 if (totalSpots <= 0) {
                     throw new Error('No more places available');
                 }
 
-                // Step 3: Add the user to the eventParticipants collection
                 const eventParticipantsCollection = collection(FIRESTORE_DB, 'eventParticipants');
                 await addDoc(eventParticipantsCollection, {
                     userId: user?.uid,
@@ -134,31 +123,25 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     joinedAt: new Date().toISOString(),
                 });
 
-                // Step 4: Increment the occupiedPlaces field in the event document
                 transaction.update(eventDocRef, {
                     takenSpots: takenSpots + 1,
                 });
             });
 
-            // If the transaction succeeds, update the state
-            setIsJoined(true); // Update the button state
-
+            setIsJoined(true);
         } catch (error: any) {
-            // Custom error handling for specific messages
             if (error.message === 'No more places available') {
                 Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');
             } else {
-                console.error('Error joining event: ', error); // Log the actual error
+                console.error('Error joining event: ', error);
                 Alert.alert('Error joining event', 'An error occurred while trying to join the event. Please try again later.');
             }
         }
     };
 
-    // Unregister the user from the event
     const eventLeave = async () => {
         try {
             await runTransaction(FIRESTORE_DB, async (transaction) => {
-                // Step 1: Query the eventParticipants collection to find the user's entry
                 const eventParticipantsQuery = query(
                     collection(FIRESTORE_DB, 'eventParticipants'),
                     where('userId', '==', user?.uid),
@@ -170,7 +153,6 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     throw new Error('You are not registered for this event');
                 }
 
-                // Step 2: Read the event document in the events collection
                 const eventDocRef = doc(FIRESTORE_DB, 'events', event.id);
                 const eventDocSnapshot = await transaction.get(eventDocRef);
 
@@ -178,48 +160,109 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     throw new Error('Event does not exist!');
                 }
 
-                // Get the current occupied places
                 const currentEventData = eventDocSnapshot.data();
                 const takenSpots = currentEventData.takenSpots || 0;
 
-                // Prevent decrementing below 0
                 if (takenSpots <= 0) {
                     throw new Error('Error: No places to decrement');
                 }
 
-                // Now that all reads are done, proceed with the writes
-
-                // Step 3: Delete the participant's document
                 querySnapshot.forEach((docSnapshot) => {
                     const participantDocRef = doc(FIRESTORE_DB, 'eventParticipants', docSnapshot.id);
                     transaction.delete(participantDocRef);
                 });
 
-                // Step 4: Decrement the occupiedPlaces field in the event document
                 transaction.update(eventDocRef, {
                     takenSpots: takenSpots - 1,
                 });
             });
 
-            // If the transaction succeeds, update the state
-            setIsJoined(false); // Update the button state
-
+            setIsJoined(false);
         } catch (error) {
             console.error('Error leaving event: ', error);
             Alert.alert('Error leaving event, please try again');
         }
     };
 
+    const handleCheckIn = async () => {
+        if (checkedIn) {
+            Alert.alert('Already Checked In', 'You have already checked in for this event.');
+            return;
+        }
+
+        if (!isCheckInEnabled()) {
+            const eventStartDateTime = new Date(`${event.date}T${event.time}`);
+            const timeUntilCheckIn = eventStartDateTime.getTime() - Date.now() - 15 * 60 * 1000;
+            const minutesUntilCheckIn = Math.ceil(timeUntilCheckIn / (60 * 1000));
+
+            Alert.alert(
+                'Check-in Not Available',
+                `Check-in opens 15 minutes before the event starts. Please try again in ${minutesUntilCheckIn} minutes.`
+            );
+            return;
+        }
+
+        try {
+            const eventParticipantsQuery = query(
+                collection(FIRESTORE_DB, 'eventParticipants'),
+                where('userId', '==', user?.uid),
+                where('eventId', '==', event.id)
+            );
+            const querySnapshot = await getDocs(eventParticipantsQuery);
+
+            if (querySnapshot.empty) {
+                throw new Error('You are not registered for this event');
+            }
+
+            const participantDoc = querySnapshot.docs[0];
+            const participantDocRef = doc(FIRESTORE_DB, 'eventParticipants', participantDoc.id);
+
+            await updateDoc(participantDocRef, {
+                isCheckedIn: true,
+                checkedInAt: new Date().toISOString(),
+            });
+
+            setCheckedIn(true);
+            Alert.alert('Success', 'You have successfully checked in!');
+        } catch (error) {
+            console.error('Error checking in: ', error);
+            Alert.alert('Error checking in', 'Please try again later.');
+        }
+    };
+
+    const isCheckInEnabled = () => {
+        const eventStartDateTime = new Date(`${event.date}T${event.time}`);
+        const currentDateTime = new Date();
+        const timeDifference = eventStartDateTime.getTime() - currentDateTime.getTime();
+        return timeDifference <= 15 * 60 * 1000 && timeDifference >= 0; // Check if within 15 minutes before the event
+    };
+
+    const checkIfCheckedIn = async () => {
+        try {
+            const eventParticipantsQuery = query(
+                collection(FIRESTORE_DB, 'eventParticipants'),
+                where('userId', '==', user?.uid),
+                where('eventId', '==', event.id),
+                where('isCheckedIn', '==', true)
+            );
+            const querySnapshot = await getDocs(eventParticipantsQuery);
+            setCheckedIn(!querySnapshot.empty);
+        } catch (error) {
+            console.error('Error checking check-in status: ', error);
+        }
+    };
+
     useEffect(() => {
-        checkIfJoined(); // Check if the user is already registered when the component mounts
-        fetchParticipants(); // Fetch the participants list
+        checkIfJoined();
+        fetchParticipants();
+        checkIfCheckedIn();
     }, []);
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Image
                 style={styles.image}
-                source={{ uri: 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80' }} // Placeholder event image
+                source={{ uri: 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80' }}
             />
 
             <View style={styles.detailsContainer}>
@@ -241,19 +284,17 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     ))}
                 </View>
 
-                {
-                    availableSpots> 1 && availableSpots <= 5
-                        ? <Text style={styles.remainingSpots}>
-                            Only {availableSpots} spots remaining!
-                        </Text>
-                        : availableSpots == 1 ?
-                        <Text style={styles.remainingSpots}>
-                            Only 1 spot remaining!
-                        </Text>
-                            : null
-                }
+                {availableSpots > 1 && availableSpots <= 5 && (
+                    <Text style={styles.remainingSpots}>
+                        Only {availableSpots} spots remaining!
+                    </Text>
+                )}
+                {availableSpots === 1 && (
+                    <Text style={styles.remainingSpots}>
+                        Only 1 spot remaining!
+                    </Text>
+                )}
 
-                {/* Render join/leave button based on the user's status */}
                 <TouchableOpacity
                     style={isJoined ? styles.leaveButton : styles.joinButton}
                     onPress={isJoined ? eventLeave : eventRegister}
@@ -262,6 +303,20 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                         {isJoined ? "Leave Event" : "Join Event"}
                     </Text>
                 </TouchableOpacity>
+
+                {isJoined && (
+                    <TouchableOpacity
+                        style={[
+                            styles.checkInButton,
+                            (!isCheckInEnabled() || checkedIn) && styles.disabledButton
+                        ]}
+                        onPress={handleCheckIn}
+                    >
+                        <Text style={styles.buttonText}>
+                            {checkedIn ? "Already Checked In" : "Check In"}
+                        </Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </ScrollView>
     );
@@ -323,29 +378,38 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 16,
     },
-    button: {
-        backgroundColor: '#33A02C',
-        borderRadius: 8,
-        paddingVertical: 12,
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
     joinButton: {
-        backgroundColor: '#33A02C',
-        borderRadius: 8,
-        paddingVertical: 12,
-        alignItems: 'center',
+        backgroundColor: '#5cb85c',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
     },
     leaveButton: {
         backgroundColor: '#d9534f',
-        borderRadius: 8,
-        paddingVertical: 12,
-        alignItems: 'center',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    checkedInContainer: {
+        backgroundColor: '#ccc',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    buttonText: {
+        color: '#fff',
+        textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    checkInButton: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    disabledButton: {
+        backgroundColor: '#cccccc',
     },
 });
 
-export default EventDetails;
+export default JoinedEventsDetails;
