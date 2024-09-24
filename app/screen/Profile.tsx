@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
+import {MaterialIcons, Feather, Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import {FIREBASE_AUTH, FIRESTORE_DB} from "../../firebaseConfig";
 import { useNavigation, NavigationProp } from '@react-navigation/native';  // Import NavigationProp for typing
@@ -88,15 +88,15 @@ const Profile = () => {
             <View style={styles.starsContainer}>
                 {/* Filled Stars */}
                 {Array(filledStars).fill(null).map((_, index) => (
-                    <Ionicons key={`filled-${index}`} name="star" size={24} color="#FFD700" />
+                    <MaterialCommunityIcons name={'star'} key={`filled-${index}`} size={24} color="#888" />
                 ))}
 
                 {/* Half Star */}
-                {halfStar && <Ionicons name="star-half" size={24} color="#FFD700" />}
+                {halfStar && <MaterialCommunityIcons name={'star-half'} size={24} color="#888" />}
 
                 {/* Empty Stars */}
                 {Array(emptyStars).fill(null).map((_, index) => (
-                    <Ionicons key={`empty-${index}`} name="star-outline" size={24} color="#FFD700" />
+                    <MaterialCommunityIcons name={'star-outline'} key={`empty-${index}`} size={24} color="#888" />
                 ))}
             </View>
         );

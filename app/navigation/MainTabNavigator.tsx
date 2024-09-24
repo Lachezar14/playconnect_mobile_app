@@ -15,7 +15,7 @@ export default function MainTabNavigator() {
                 component={EventsStack}
                 options={{
                     title: 'Events',
-                    tabBarIcon: ({ color }) => <MaterialIcons name="event" size={24} color={color} />
+                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calendar" size={24} color={color} />
                 }}
             />
             <Tab.Screen
@@ -23,7 +23,7 @@ export default function MainTabNavigator() {
                 component={CreateEvent}
                 options={{
                     title: 'Create',
-                    tabBarIcon: ({ color }) => <MaterialIcons name="add" size={24} color={color} />
+                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'plus-circle'} size={24} color={color} />
                 }}
             />
             <Tab.Screen

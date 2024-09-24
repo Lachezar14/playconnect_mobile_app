@@ -5,16 +5,16 @@ import { collection, addDoc } from 'firebase/firestore';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import { useAuth } from '../context/AuthContext';
+import LocationInput from "../components/LocationInput";
 
-// Event type definition
-interface Event {
-    title: string;
-    date: string;
-    time: string;
-    location: string;
-    sportsType: string;
-    availablePlaces: number;
-    userId: string;
+interface Suggestion {
+    place_id: string;
+    street: string;
+    streetNumber: string;
+    city: string;
+    postcode: string;
+    latitude: number;
+    longitude: number;
 }
 
 const CreateEvent = () => {
@@ -24,9 +24,11 @@ const CreateEvent = () => {
     const [title, setTitle] = useState('');
     const [date, setDate] = useState<Date | undefined>(undefined);
     const [time, setTime] = useState<Date | undefined>(undefined);
-    const [location, setLocation] = useState('');
+    const [location, setLocation] = useState<Suggestion | null>(null);  // Store the full place object
     const [sportType, setSportType] = useState('');
     const [spots, setSpots] = useState('');
+    const [shouldResetLocation, setShouldResetLocation] = useState(false); // State to control reset
+
 
     // For displaying the date picker
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -51,10 +53,15 @@ const CreateEvent = () => {
                 title,
                 date: formattedDate,
                 time: formattedTime,
-                location,
                 sportType,
                 spots: parseInt(spots),
                 takenSpots: 0,
+                street: location?.street,
+                streetNumber: location?.streetNumber,
+                city: location?.city,
+                postcode: location?.postcode,
+                latitude: Number(location?.latitude),
+                longitude: Number(location?.longitude),
             });
 
             // Success message
@@ -64,9 +71,10 @@ const CreateEvent = () => {
             setTitle('');
             setDate(undefined);
             setTime(undefined);
-            setLocation('');
+            setLocation(null);
             setSportType('');
             setSpots('');
+            setShouldResetLocation(true); // Set reset flag to true
         } catch (error) {
             console.error('Error adding event: ', error);
             Alert.alert('Error creating event, please try again');
@@ -123,11 +131,10 @@ const CreateEvent = () => {
             )}
 
             <Text style={styles.label}>Location</Text>
-            <TextInput
-                style={styles.input}
-                value={location}
-                onChangeText={setLocation}
-                placeholder="Enter event location"
+            <LocationInput
+                setLocation={setLocation}
+                resetQuery={shouldResetLocation}
+                setShouldResetLocation={setShouldResetLocation}
             />
 
             <Text style={styles.label}>Sport</Text>

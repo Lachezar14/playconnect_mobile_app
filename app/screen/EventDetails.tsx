@@ -11,10 +11,13 @@ interface Event {
     title: string;
     date: string;
     time: string;
-    location: string;
     spots: number;
     userId: string;
     takenSpots?: number;
+    street: string;
+    streetNumber: string;
+    city: string;
+    postcode: string;
 }
 
 // Participant type definition
@@ -230,7 +233,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     Come to the SportsCentrum Arena and take part in one of the best padel tournaments for
                     professional and enthusiast padel players.
                 </Text>
-                <Text style={styles.eventLocation}>Address: {event.location}</Text>
+                <Text style={styles.eventLocation}>Address: {event.street} {event.streetNumber}, {event.city}, {event.postcode}</Text>
 
                 <Text style={styles.participantsLabel}>Participants:</Text>
                 <View style={styles.participantsContainer}>

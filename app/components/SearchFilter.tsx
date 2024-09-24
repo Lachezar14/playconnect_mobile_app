@@ -57,7 +57,7 @@ const SearchFilter: React.FC<FilterProps> = ({ onSearch, onFilterApply }) => {
                 <FontAwesome name="search" size={20} color="#6e6e6e" style={styles.icon} />
                 <TextInput
                     style={styles.input}
-                    placeholder="Search listings..."
+                    placeholder="Search events..."
                     value={title}
                     onChangeText={setTitle}
                     onSubmitEditing={handleSearch}
