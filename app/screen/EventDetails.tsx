@@ -10,7 +10,6 @@ interface Event {
     id: string;
     title: string;
     date: string;
-    time: string;
     spots: number;
     userId: string;
     takenSpots?: number;
@@ -18,6 +17,7 @@ interface Event {
     streetNumber: string;
     city: string;
     postcode: string;
+    sportType: string;
 }
 
 // Participant type definition
@@ -218,16 +218,37 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
         fetchParticipants(); // Fetch the participants list
     }, []);
 
+    // Function to map the sport type to an image URL
+    const getSportImage = (sport: string) => {
+        switch (sport.toLowerCase()) {
+            case 'tennis':
+                return 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1976&q=80';
+            case 'padel':
+                return 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
+            case 'football':
+                return 'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80';
+            case 'basketball':
+                return 'https://images.unsplash.com/photo-1559692048-79a3f837883d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80';
+            default:
+                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'; // Fallback image if sport doesn't match
+        }
+    };
+
+    const eventDateTime = new Date(event.date);
+
+    const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Image
+                source={{ uri: getSportImage(event.sportType) }}
                 style={styles.image}
-                source={{ uri: 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80' }} // Placeholder event image
             />
 
             <View style={styles.detailsContainer}>
                 <Text style={styles.eventTitle}>{event.title}</Text>
-                <Text style={styles.eventDate}>{event.date}/{event.time}</Text>
+                <Text style={styles.eventDate}>{formattedTime} / {formattedDate}</Text>
                 <Text style={styles.eventDescription}>
                     Are you a padel enthusiast? Do you want to play but don’t have a buddy? Fear not!
                     Come to the SportsCentrum Arena and take part in one of the best padel tournaments for

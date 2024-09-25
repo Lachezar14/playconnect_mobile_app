@@ -41,9 +41,17 @@ const CreateEvent = () => {
             return;
         }
 
-        // Format the date and time as strings
-        const formattedDate = moment(date).format('YYYY-MM-DD');
-        const formattedTime = moment(time).format('HH:mm');
+        // Combine the date and time into a single Date object and convert to UTC
+        const eventDateTime = moment(date)
+            .set({
+                hour: moment(time).hour(),
+                minute: moment(time).minute(),
+            })
+            .utc();
+
+        // Format the event date and time for storage
+        const formattedDateTimeUTC = eventDateTime.format();
+        const formattedLocalTime = eventDateTime.local().format('HH:mm');
 
         try {
             // Add new event to Firestore
@@ -51,8 +59,7 @@ const CreateEvent = () => {
             await addDoc(eventCollection, {
                 userId: user?.uid,
                 title,
-                date: formattedDate,
-                time: formattedTime,
+                date: formattedDateTimeUTC,
                 sportType,
                 spots: parseInt(spots),
                 takenSpots: 0,
