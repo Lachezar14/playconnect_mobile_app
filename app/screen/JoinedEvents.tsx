@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FIRESTORE_DB } from "../../firebaseConfig";
 import EventCard from '../components/EventCard';  // Assuming you already created this component
 import { useAuth } from '../context/AuthContext';
+import {SafeAreaView} from "react-native-safe-area-context";
 
 // Event type definition
 interface Event {
@@ -15,6 +16,9 @@ interface Event {
     location: string;
     availablePlaces: number;
     userId: string;
+    latitude: number;
+    longitude: number;
+    sportType: string;
 }
 
 interface EventParticipant {
@@ -108,7 +112,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#fff',
     },
     loadingContainer: {
         flex: 1,

@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
         right: 20,
     },
     profileImage: {
+        marginTop: 50,
         width: 100,
         height: 100,
         borderRadius: 50,

@@ -31,10 +31,7 @@ export default function MainTabNavigator() {
                     title: 'Quick Join',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="handshake" size={24} color={color} />,
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => {
-                            // Open filter modal or navigate to a filter screen
-                            console.log('Filter button pressed');
-                        }}>
+                        <TouchableOpacity onPress={() => navigation.navigate('QuickJoin', { openModal: true })}>
                             <Feather name={'sliders'} size={24} color={'#333'} style={{ marginRight: 20 }} />
                         </TouchableOpacity>
                     ),
@@ -61,6 +58,7 @@ export default function MainTabNavigator() {
                 component={ProfileStack}
                 options={{
                     title: 'Profile',
+                    headerShown: false,
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={24} color={color} />
                 }}
             />

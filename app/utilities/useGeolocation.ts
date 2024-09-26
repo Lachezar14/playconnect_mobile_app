@@ -38,7 +38,8 @@ const useGeolocation = (eventLatitude: number, eventLongitude: number) => {
         })();
     }, []);
 
-    useEffect(() => {
+    // Updated calculateEventDistance to accept parameters
+    const calculateEventDistance = (eventLatitude: number, eventLongitude: number) => {
         if (userLocation) {
             const dist = calculateDistance(
                 userLocation.latitude,
@@ -46,11 +47,28 @@ const useGeolocation = (eventLatitude: number, eventLongitude: number) => {
                 eventLatitude,
                 eventLongitude
             );
-            setDistance(dist);
+
+            // Convert distance to string format
+            if (dist < 1) {
+                // If distance is less than 1 km, return in meters
+                return `${Math.round(dist * 1000)}m`; // Convert to meters and round
+            } else {
+                // If distance is 1 km or more, return in kilometers
+                return `${dist.toFixed(1)}km`; // Format to 1 decimal place
+            }
+        }
+        return "N/A"; // Return "N/A" if userLocation is not available
+    };
+
+    // Automatically calculate distance when userLocation updates
+    useEffect(() => {
+        if (userLocation) {
+            setDistance(calculateDistance(userLocation.latitude, userLocation.longitude, eventLatitude, eventLongitude));
         }
     }, [userLocation, eventLatitude, eventLongitude]);
 
-    return { userLocation, distance };
+    return { userLocation, distance, calculateEventDistance };
 };
 
 export default useGeolocation;
+

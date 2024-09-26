@@ -4,16 +4,50 @@ import {View, Text, StyleSheet, Dimensions, ImageBackground} from 'react-native'
 
 interface EventCardProps {
     event: {
+        id: string;
         title: string;
-        sport: string;
-        distance: string;
-        startTime: string;
+        date: string;
+        time: string;
+        location: string;
+        availablePlaces: number;
+        sportType: string;
+        userId: string;
+        latitude: number;
+        longitude: number;
+        distance?: number;
     };
 }
 
 const { width, height } = Dimensions.get('window');
 
 const EventCardSwipe: React.FC<EventCardProps> = ({ event }) => {
+    // Format the Firestore date into a Date object
+    const eventDateTime = new Date(event.date);
+
+    // Format the time and date
+    const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'});
+    const formatEventDate = (eventDateTime: Date) => {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(now.getDate() + 1);
+
+        // Compare dates
+        const isToday = eventDateTime.toDateString() === now.toDateString();
+        const isTomorrow = eventDateTime.toDateString() === tomorrow.toDateString();
+
+        if (isToday) {
+            return "Today";
+        } else if (isTomorrow) {
+            return "Tomorrow";
+        } else {
+            // For other dates, return the formatted date
+            return eventDateTime.toLocaleDateString([], { month: 'short', day: 'numeric', weekday: 'long' });
+        }
+    };
+
+// Example usage
+    const formattedDate = formatEventDate(eventDateTime);
+
     return (
         <View style={styles.safeArea}>
             <ImageBackground
@@ -24,9 +58,9 @@ const EventCardSwipe: React.FC<EventCardProps> = ({ event }) => {
                 <View style={styles.overlay} />
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>{event.title}</Text>
-                    <Text style={styles.text}>Sport: {event.sport}</Text>
+                    <Text style={styles.text}>Sport: {event.sportType}</Text>
                     <Text style={styles.text}>Distance: {event.distance}</Text>
-                    <Text style={styles.text}>Start Time: {event.startTime}</Text>
+                    <Text style={styles.text}>Date: {formattedTime} / {formattedDate}</Text>
                 </View>
             </ImageBackground>
         </View>

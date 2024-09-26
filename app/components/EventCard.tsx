@@ -91,12 +91,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 12,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 10, // Increased for Android
         marginBottom: 16,
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#ccc', // Light gray border
     },
     image: {
         width: '100%',
