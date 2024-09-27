@@ -1,25 +1,12 @@
 import React, {useCallback, useState} from 'react';
 import {View, Text, FlatList, StyleSheet, ActivityIndicator} from 'react-native';
-import {FIRESTORE_DB} from "../../firebaseConfig";
-import { collection, getDocs } from 'firebase/firestore';
 import { useFocusEffect } from '@react-navigation/native';
 import EventCard from "../components/EventCard";
 import SearchFilter from "../components/SearchFilter";
 import SportFilter from "../components/SportFilter";
-
-// Event type definition
-interface Event {
-    id: string;
-    title: string;
-    date: string;
-    time: string;
-    location: string;
-    availablePlaces: number;
-    sportType: string;
-    userId: string;
-    latitude: number;
-    longitude: number;
-}
+import {addDistanceToEvents, fetchEvents} from "../services/eventService";
+import {getUserLocation} from "../services/locationService";
+import {Event} from "../utilities/interfaces";
 
 // Main component to render the list of events
 const Events = () => {
@@ -29,31 +16,32 @@ const Events = () => {
     const [sports, setSports] = useState<string[]>([]);
 
     // Fetch events from Firestore
-    const fetchEvents = async () => {
+    const loadEvents = useCallback(async () => {
         try {
-            const eventsCollection = collection(FIRESTORE_DB, 'events');
-            const eventSnapshot = await getDocs(eventsCollection);
-            const eventList: Event[] = eventSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Event[];
-            setEvents(eventList);
-            setFilteredEvents(eventList); // Initialize with full event list
+            setLoading(true);
+            const userLocation = await getUserLocation();
+            let fetchedEvents = await fetchEvents();
 
-            // Extract unique sports from events
-            const uniqueSports = Array.from(new Set(eventList.map(event => event.sportType)));
+            if (userLocation) {
+                fetchedEvents = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
+            }
+
+            setEvents(fetchedEvents);
+            setFilteredEvents(fetchedEvents);
+
+            const uniqueSports = Array.from(new Set(fetchedEvents.map(event => event.sportType)));
             setSports(['All', ...uniqueSports]);
         } catch (error) {
-            console.error("Error fetching events: ", error);
+            console.error("Error loading events: ", error);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
-            fetchEvents();
-        }, [])
+            loadEvents();
+        }, [loadEvents])
     );
 
     // Search and Filter Logic

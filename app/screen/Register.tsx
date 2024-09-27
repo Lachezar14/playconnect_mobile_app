@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Button, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import {doc, runTransaction, setDoc} from 'firebase/firestore';
+import {doc, runTransaction} from 'firebase/firestore';
 import { AuthStackParamList } from '../utilities/AuthStackParamList';
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {SafeAreaView} from "react-native-safe-area-context";

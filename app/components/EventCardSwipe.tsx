@@ -1,24 +1,11 @@
 // components/EventCard.tsx
 import React from 'react';
-import {View, Text, StyleSheet, Dimensions, ImageBackground} from 'react-native';
+import {View, Text, StyleSheet, ImageBackground} from 'react-native';
+import { Event } from '../utilities/interfaces';
 
 interface EventCardProps {
-    event: {
-        id: string;
-        title: string;
-        date: string;
-        time: string;
-        location: string;
-        availablePlaces: number;
-        sportType: string;
-        userId: string;
-        latitude: number;
-        longitude: number;
-        distance?: number;
-    };
+    event: Event;
 }
-
-const { width, height } = Dimensions.get('window');
 
 const EventCardSwipe: React.FC<EventCardProps> = ({ event }) => {
     // Format the Firestore date into a Date object

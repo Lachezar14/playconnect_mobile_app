@@ -6,16 +6,10 @@ import {FIREBASE_AUTH, FIRESTORE_DB} from "../../firebaseConfig";
 import { useNavigation, NavigationProp } from '@react-navigation/native';  // Import NavigationProp for typing
 import { ProfileStackParamList } from '../navigation/stack/ProfileStack';
 import {collection, doc, getDoc, getDocs, getFirestore, query, where} from "firebase/firestore";
+import {User} from "../utilities/interfaces";
 
 // Correctly type the navigation object
 type ProfileScreenNavigationProp = NavigationProp<ProfileStackParamList, 'Profile'>;
-
-interface User {
-    firstName: string;
-    lastName: string;
-    email: string;
-    userId: string;
-}
 
 const Profile = () => {
     const navigation = useNavigation<ProfileScreenNavigationProp>();

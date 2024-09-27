@@ -5,29 +5,19 @@ import EventCardSwipe from "../components/EventCardSwipe";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from '../components/FilterModal';
 import { Feather } from "@expo/vector-icons";
-import { collection, getDocs } from "firebase/firestore";
-import { FIRESTORE_DB } from "../../firebaseConfig";
-import useGeolocation from "../utilities/useGeolocation";
-
-// Define the event type
-interface Event {
-    id: string;
-    title: string;
-    date: string;
-    time: string;
-    location: string;
-    availablePlaces: number;
-    sportType: string;
-    userId: string;
-    latitude: number;
-    longitude: number;
-    distance?: number;
-}
+import {getUserLocation} from "../services/locationService";
+import {addDistanceToEvents, fetchEvents} from "../services/eventService";
+import { Event } from '../utilities/interfaces';
 
 const defaultFilters = { sport: 'All', maxDistance: 50 };
 
+interface Filters {
+    sport: string;
+    maxDistance: number;
+}
+
+// @ts-ignore
 const QuickJoin = ({ navigation, route }) => {
-    const { userLocation, calculateEventDistance } = useGeolocation(0, 0);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
@@ -35,38 +25,22 @@ const QuickJoin = ({ navigation, route }) => {
     const [filters, setFilters] = useState(defaultFilters);
 
     useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const eventsCollection = collection(FIRESTORE_DB, 'events');
-                const eventSnapshot = await getDocs(eventsCollection);
-                const eventList: Event[] = eventSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Event[];
+        const loadEventsAndLocation = async () => {
+            const userLocation = await getUserLocation();
+            const fetchedEvents = await fetchEvents();
 
-                if (userLocation) {
-                    // Calculate distance for each event
-                    const eventsWithDistance = eventList.map(event => {
-                        // Call calculateEventDistance for each event
-                        const distance = calculateEventDistance(event.latitude, event.longitude);
-                        return {
-                            ...event,
-                            distance,
-                        };
-                    });
-
-                    setEvents(eventsWithDistance);
-                    setFilteredEvents(eventsWithDistance); // Initialize with full event list including distance
-                } else {
-                    setEvents(eventList);
-                    setFilteredEvents(eventList); // Initialize without distances if user location is not available
-                }
-            } catch (error) {
-                console.error("Error fetching events: ", error);
+            if (userLocation) {
+                const eventsWithDistance = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
+                setEvents(eventsWithDistance);
+                setFilteredEvents(eventsWithDistance);
+            } else {
+                setEvents(fetchedEvents);
+                setFilteredEvents(fetchedEvents);
             }
         };
-        fetchEvents();
-    }, [userLocation]);
+
+        loadEventsAndLocation();
+    }, []);
 
     useEffect(() => {
         if (route.params?.openModal) {
@@ -88,28 +62,28 @@ const QuickJoin = ({ navigation, route }) => {
         applyFilters(filters);
     }, [filters]);
 
-    const onSwipedRight = (index) => {
+    const onSwipedRight = (index: number) => {
         const event = filteredEvents[index];
         console.log(`Joined ${event.title}`);
         // Add logic to handle event joining (e.g., save the event in Firebase)
     };
 
-    const onSwipedLeft = (index) => {
+    const onSwipedLeft = (index: number) => {
         const event = filteredEvents[index];
         console.log(`Skipped ${event.title}`);
     };
 
-    const applyFilters = (newFilters) => {
+    const applyFilters = (newFilters: Filters) => {
         const filtered = events.filter(event => {
-            const matchesSport = newFilters.sport === 'All' || event.sport === newFilters.sport;
-            const matchesDistance = event.distance <= newFilters.maxDistance;
+            const matchesSport = newFilters.sport === 'All' || event.sportType === newFilters.sport;
+            const matchesDistance = event.distanceNum !== undefined && event.distanceNum / 1000 <= newFilters.maxDistance;
             return matchesSport && matchesDistance;
         });
         setFilteredEvents(filtered);
         setCurrentIndex(0);
     };
 
-    const handleApplyFilters = (newFilters) => {
+    const handleApplyFilters = (newFilters: Filters) => {
         setFilters(newFilters);
     };
 

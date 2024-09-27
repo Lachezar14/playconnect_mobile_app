@@ -1,26 +1,14 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import useGeolocation from '../utilities/useGeolocation';
-
-// Event type definition
-interface Event {
-    id: string;
-    title: string;
-    date: string;
-    availablePlaces: number;
-    userId: string;
-    latitude: number;
-    longitude: number;
-    sportType: string;
-}
+import { Event } from '../utilities/interfaces';
 
 // Define the navigation stack types
 type RootStackParamList = {
     Events: undefined;
     EventDetails: { event: Event };
-    JoinedEventsDetails: { event: Event }; // Define the joined event details page
+    JoinedEventsDetails: { event: Event };
 };
 
 // Define the type for navigation prop
@@ -29,12 +17,11 @@ type EventCardNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Ev
 // Card component to display event details
 interface EventCardProps {
     event: Event;
-    targetPage: 'EventDetails' | 'JoinedEventsDetails'; // Specify the target page
+    targetPage: 'EventDetails' | 'JoinedEventsDetails';
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     const navigation = useNavigation<EventCardNavigationProp>();
-    const { distance } = useGeolocation(event.latitude, event.longitude);
 
     // Format the Firestore date into a Date object
     const eventDateTime = new Date(event.date);
@@ -55,7 +42,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
             case 'basketball':
                 return 'https://images.unsplash.com/photo-1559692048-79a3f837883d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80';
             default:
-                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'; // Fallback image if sport doesn't match
+                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
         }
     };
 
@@ -72,10 +59,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
                         <Text style={styles.time}>
                             {formattedTime} / {formattedDate}
                         </Text>
-                        {distance !== null && (
-                            <Text style={styles.distance}>
-                                {distance < 1 ? `${(distance * 1000).toFixed(0)}m` : `${distance.toFixed(2)}km`}
-                            </Text>
+                        {event.distance && (
+                            <Text style={styles.distance}>{event.distance}</Text>
                         )}
                     </View>
                 </View>

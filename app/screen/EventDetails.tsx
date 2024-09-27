@@ -4,21 +4,7 @@ import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import { addDoc, collection, deleteDoc, doc, query, where, getDocs, runTransaction }  from "firebase/firestore";
 import {FIRESTORE_DB} from "../../firebaseConfig";
 import { useAuth } from '../context/AuthContext';
-
-// Event type definition
-interface Event {
-    id: string;
-    title: string;
-    date: string;
-    spots: number;
-    userId: string;
-    takenSpots?: number;
-    street: string;
-    streetNumber: string;
-    city: string;
-    postcode: string;
-    sportType: string;
-}
+import { Event } from '../utilities/interfaces';
 
 // Participant type definition
 interface Participant {
@@ -46,6 +32,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
 
     // Fetch participants and their user details
     const fetchParticipants = async () => {
+        if (!event.id) {
+            console.error('Event ID is undefined');
+            return;
+        }
+
         try {
             // Step 1: Get all participants from `eventParticipants` table based on `eventId`
             const eventParticipantsQuery = query(
@@ -85,6 +76,12 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
 
     // Check if the user has joined the event
     const checkIfJoined = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            setLoading(false);
+            return;
+        }
+
         try {
             const eventParticipantsQuery = query(
                 collection(FIRESTORE_DB, 'eventParticipants'),
@@ -103,6 +100,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     };
 
     const eventRegister = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return;
+        }
+
         // Implement event registration logic here
         try {
             // Start a Firestore transaction
@@ -159,6 +161,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
 
     // Unregister the user from the event
     const eventLeave = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return;
+        }
+
         try {
             await runTransaction(FIRESTORE_DB, async (transaction) => {
                 // Step 1: Query the eventParticipants collection to find the user's entry

@@ -4,21 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { addDoc, collection, updateDoc, doc, query, where, getDocs, runTransaction } from "firebase/firestore";
 import { FIRESTORE_DB } from "../../firebaseConfig";
 import { useAuth } from '../context/AuthContext';
-
-// Event type definition
-interface Event {
-    id: string;
-    title: string;
-    date: string;
-    spots: number;
-    userId: string;
-    takenSpots?: number;
-    street: string;
-    streetNumber: string;
-    city: string;
-    postcode: string;
-    sportType: string;
-}
+import { Event } from '../utilities/interfaces';
 
 // Participant type definition
 interface Participant {
@@ -47,6 +33,11 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
 
     // Fetch participants and their user details
     const fetchParticipants = async () => {
+        if (!event.id) {
+            console.error('Event ID is undefined');
+            return;
+        }
+
         try {
             const eventParticipantsQuery = query(
                 collection(FIRESTORE_DB, 'eventParticipants'),
@@ -84,6 +75,12 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
     };
 
     const checkIfJoined = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            setLoading(false);
+            return;
+        }
+
         try {
             const eventParticipantsQuery = query(
                 collection(FIRESTORE_DB, 'eventParticipants'),
@@ -100,6 +97,11 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
     };
 
     const eventRegister = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return;
+        }
+
         // Implement event registration logic here
         try {
             await runTransaction(FIRESTORE_DB, async (transaction) => {
@@ -143,6 +145,11 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
     };
 
     const eventLeave = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return;
+        }
+
         try {
             await runTransaction(FIRESTORE_DB, async (transaction) => {
                 const eventParticipantsQuery = query(
