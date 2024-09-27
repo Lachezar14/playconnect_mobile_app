@@ -1,11 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {Feather, MaterialCommunityIcons} from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import EventsStack from './stack/EventsStack';
 import CreateEvent from '../screen/CreateEvent';
 import ProfileStack from './stack/ProfileStack';
-import QuickJoin from "../screen/QuickJoin";
-import {Platform, TouchableOpacity} from "react-native";
+import { Platform } from "react-native";
+import QuickJoinStack from "./stack/QuickJoinStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -26,16 +26,12 @@ export default function MainTabNavigator() {
             }}>
             <Tab.Screen
                 name="QuickJoinTab"
-                component={QuickJoin}
-                options={({ navigation }) => ({
+                component={QuickJoinStack}
+                options={{
                     title: 'Quick Join',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="handshake" size={24} color={color} />,
-                    headerRight: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate('QuickJoin', { openModal: true })}>
-                            <Feather name={'sliders'} size={24} color={'#333'} style={{ marginRight: 20 }} />
-                        </TouchableOpacity>
-                    ),
-                })}
+                    headerShown: false,
+                }}
             />
             <Tab.Screen
                 name="EventsTab"

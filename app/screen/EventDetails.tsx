@@ -1,17 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Button} from 'react-native';
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import { addDoc, collection, deleteDoc, doc, query, where, getDocs, runTransaction }  from "firebase/firestore";
-import {FIRESTORE_DB} from "../../firebaseConfig";
 import { useAuth } from '../context/AuthContext';
-import { Event } from '../utilities/interfaces';
-
-// Participant type definition
-interface Participant {
-    id: string;
-    firstName: string;
-    lastName: string;
-}
+import {Event, Participant} from '../utilities/interfaces';
+import {eventLeave, eventJoin, checkIfJoined, fetchParticipants} from "../services/eventParticipationService";
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -31,42 +23,15 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
 
     // Fetch participants and their user details
-    const fetchParticipants = async () => {
+    const handleFetchParticipants = async () => {
         if (!event.id) {
             console.error('Event ID is undefined');
             return;
         }
 
         try {
-            // Step 1: Get all participants from `eventParticipants` table based on `eventId`
-            const eventParticipantsQuery = query(
-                collection(FIRESTORE_DB, 'eventParticipants'),
-                where('eventId', '==', event.id)
-            );
-            const querySnapshot = await getDocs(eventParticipantsQuery);
-
-            const participantPromises = querySnapshot.docs.map(async (docSnapshot) => {
-                const data = docSnapshot.data();
-                const userId = data.userId;
-
-                // Step 2: Fetch the corresponding user details from the `users` collection
-                const userQuery = query(
-                    collection(FIRESTORE_DB, 'users'),
-                    where('userId', '==', userId)
-                );
-                const userSnapshot = await getDocs(userQuery);
-
-                // Assuming each `userQuery` has only one user
-                if (!userSnapshot.empty) {
-                    const userData = userSnapshot.docs[0].data();
-                    return { id: userId, firstName: userData.firstName, lastName: userData.lastName } as Participant;
-                }
-                return null;
-            });
-
-            // Step 3: Resolve all promises and filter out null values
-            const participantList = (await Promise.all(participantPromises)).filter(Boolean) as Participant[];
-            setParticipants(participantList);
+            const participantList = await fetchParticipants(event.id); // Use the service here
+            setParticipants(participantList); // Set the fetched participants in state
             console.log('Participants: ', participantList);
         } catch (error) {
             console.error('Error fetching participants: ', error);
@@ -75,7 +40,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     };
 
     // Check if the user has joined the event
-    const checkIfJoined = async () => {
+    const handleCheckIfJoined = async () => {
         if (!event.id || !user?.uid) {
             console.error('Event ID or User ID is undefined');
             setLoading(false);
@@ -83,137 +48,44 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
         }
 
         try {
-            const eventParticipantsQuery = query(
-                collection(FIRESTORE_DB, 'eventParticipants'),
-                where('userId', '==', user?.uid),
-                where('eventId', '==', event.id)
-            );
-            const querySnapshot = await getDocs(eventParticipantsQuery);
-
-            // If the user is found in the participants list
-            setIsJoined(!querySnapshot.empty);
+            const userIsJoined = await checkIfJoined(event.id, user.uid); // Use the service function
+            setIsJoined(userIsJoined); // Set isJoined based on the returned value
         } catch (error) {
-            console.error('Error checking participation: ', error);
+            console.error('Error checking participation:', error);
         } finally {
             setLoading(false); // Set loading to false once the check is done
         }
     };
 
-    const eventRegister = async () => {
+    const handleEventJoin = async () => {
         if (!event.id || !user?.uid) {
             console.error('Event ID or User ID is undefined');
             return;
         }
 
-        // Implement event registration logic here
         try {
-            // Start a Firestore transaction
-            await runTransaction(FIRESTORE_DB, async (transaction) => {
-                // Step 1: Get a reference to the event document in the events collection
-                const eventDocRef = doc(FIRESTORE_DB, 'events', event.id);
-
-                // Step 2: Read the current event data inside the transaction
-                const eventDocSnapshot = await transaction.get(eventDocRef);
-
-                if (!eventDocSnapshot.exists()) {
-                    throw new Error('Event does not exist!');
-                }
-
-                // Get current data
-                const currentEventData = eventDocSnapshot.data();
-
-                // Check if there are available places
-                const availableSpots = currentEventData.spots;
-                const takenSpots = currentEventData.takenSpots || 0; // Default to 0 if it doesn't exist yet
-                const totalSpots = availableSpots - takenSpots;
-
-                if (totalSpots <= 0) {
-                    throw new Error('No more places available');
-                }
-
-                // Step 3: Add the user to the eventParticipants collection
-                const eventParticipantsCollection = collection(FIRESTORE_DB, 'eventParticipants');
-                await addDoc(eventParticipantsCollection, {
-                    userId: user?.uid,
-                    eventId: event.id,
-                    joinedAt: new Date().toISOString(),
-                });
-
-                // Step 4: Increment the occupiedPlaces field in the event document
-                transaction.update(eventDocRef, {
-                    takenSpots: takenSpots + 1,
-                });
-            });
-
-            // If the transaction succeeds, update the state
-            setIsJoined(true); // Update the button state
-
-        } catch (error: any) {
-            // Custom error handling for specific messages
+            await eventJoin(event.id, user.uid);
+            setIsJoined(true);
+        } catch (error: Error | any) {
             if (error.message === 'No more places available') {
                 Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');
             } else {
-                console.error('Error joining event: ', error); // Log the actual error
+                console.error('Error joining event: ', error);
                 Alert.alert('Error joining event', 'An error occurred while trying to join the event. Please try again later.');
             }
         }
     };
 
     // Unregister the user from the event
-    const eventLeave = async () => {
+    const handleEventLeave = async () => {
         if (!event.id || !user?.uid) {
             console.error('Event ID or User ID is undefined');
             return;
         }
 
         try {
-            await runTransaction(FIRESTORE_DB, async (transaction) => {
-                // Step 1: Query the eventParticipants collection to find the user's entry
-                const eventParticipantsQuery = query(
-                    collection(FIRESTORE_DB, 'eventParticipants'),
-                    where('userId', '==', user?.uid),
-                    where('eventId', '==', event.id)
-                );
-                const querySnapshot = await getDocs(eventParticipantsQuery);
-
-                if (querySnapshot.empty) {
-                    throw new Error('You are not registered for this event');
-                }
-
-                // Step 2: Read the event document in the events collection
-                const eventDocRef = doc(FIRESTORE_DB, 'events', event.id);
-                const eventDocSnapshot = await transaction.get(eventDocRef);
-
-                if (!eventDocSnapshot.exists()) {
-                    throw new Error('Event does not exist!');
-                }
-
-                // Get the current occupied places
-                const currentEventData = eventDocSnapshot.data();
-                const takenSpots = currentEventData.takenSpots || 0;
-
-                // Prevent decrementing below 0
-                if (takenSpots <= 0) {
-                    throw new Error('Error: No places to decrement');
-                }
-
-                // Now that all reads are done, proceed with the writes
-
-                // Step 3: Delete the participant's document
-                querySnapshot.forEach((docSnapshot) => {
-                    const participantDocRef = doc(FIRESTORE_DB, 'eventParticipants', docSnapshot.id);
-                    transaction.delete(participantDocRef);
-                });
-
-                // Step 4: Decrement the occupiedPlaces field in the event document
-                transaction.update(eventDocRef, {
-                    takenSpots: takenSpots - 1,
-                });
-            });
-
-            // If the transaction succeeds, update the state
-            setIsJoined(false); // Update the button state
-
+            await eventLeave(event.id, user.uid);
+            setIsJoined(false);
         } catch (error) {
             console.error('Error leaving event: ', error);
             Alert.alert('Error leaving event, please try again');
@@ -221,8 +93,8 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     };
 
     useEffect(() => {
-        checkIfJoined(); // Check if the user is already registered when the component mounts
-        fetchParticipants(); // Fetch the participants list
+        handleCheckIfJoined(); // Check if the user is already registered when the component mounts
+        handleFetchParticipants(); // Fetch the participants list
     }, []);
 
     // Function to map the sport type to an image URL
@@ -287,7 +159,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                 {/* Render join/leave button based on the user's status */}
                 <TouchableOpacity
                     style={isJoined ? styles.leaveButton : styles.joinButton}
-                    onPress={isJoined ? eventLeave : eventRegister}
+                    onPress={isJoined ? handleEventLeave : handleEventJoin}
                 >
                     <Text style={styles.buttonText}>
                         {isJoined ? "Leave Event" : "Join Event"}

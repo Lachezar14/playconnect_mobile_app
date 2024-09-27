@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Text } from 'react-native';
+import {View, StyleSheet, Dimensions, TouchableOpacity, Text, Alert} from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import EventCardSwipe from "../components/EventCardSwipe";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FilterModal from '../components/FilterModal';
 import { Feather } from "@expo/vector-icons";
 import {getUserLocation} from "../services/locationService";
-import {addDistanceToEvents, fetchEvents} from "../services/eventService";
+import {addDistanceToEvents, fetchUpcomingEventsNotJoinedByUser} from "../services/eventService";
 import { Event } from '../utilities/interfaces';
+import {eventJoin} from "../services/eventParticipationService";
+import {useAuth} from "../context/AuthContext";
 
 const defaultFilters = { sport: 'All', maxDistance: 50 };
 
@@ -23,11 +25,12 @@ const QuickJoin = ({ navigation, route }) => {
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [filters, setFilters] = useState(defaultFilters);
+    const { user } = useAuth();
 
     useEffect(() => {
         const loadEventsAndLocation = async () => {
             const userLocation = await getUserLocation();
-            const fetchedEvents = await fetchEvents();
+            const fetchedEvents = await fetchUpcomingEventsNotJoinedByUser(user?.uid || '');
 
             if (userLocation) {
                 const eventsWithDistance = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
@@ -62,10 +65,29 @@ const QuickJoin = ({ navigation, route }) => {
         applyFilters(filters);
     }, [filters]);
 
-    const onSwipedRight = (index: number) => {
+    const onSwipedUp = (index: number) => {
         const event = filteredEvents[index];
-        console.log(`Joined ${event.title}`);
-        // Add logic to handle event joining (e.g., save the event in Firebase)
+        navigation.navigate('EventDetails', { event });
+    };
+
+    const onSwipedRight = async (index: number) => {
+        const event = filteredEvents[index];
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return;
+        }
+
+        try {
+            await eventJoin(event.id, user.uid);
+            //setIsJoined(true);
+        } catch (error: Error | any) {
+            if (error.message === 'No more places available') {
+                Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');
+            } else {
+                console.error('Error joining event: ', error);
+                Alert.alert('Error joining event', 'An error occurred while trying to join the event. Please try again later.');
+            }
+        }
     };
 
     const onSwipedLeft = (index: number) => {
@@ -100,14 +122,20 @@ const QuickJoin = ({ navigation, route }) => {
             {filteredEvents.length > 0 ? (
                 <Swiper
                     cards={filteredEvents}
-                    renderCard={(card) => <EventCardSwipe event={card} />}
+                    renderCard={(card) =>
+                        <EventCardSwipe
+                            event={card}
+                        />}
                     onSwipedRight={onSwipedRight}
                     onSwipedLeft={onSwipedLeft}
+                    onSwipedTop={onSwipedUp}
                     cardIndex={currentIndex}
                     backgroundColor={'transparent'}
                     stackSize={3}
                     cardVerticalMargin={0}
                     cardHorizontalMargin={0}
+                    animateOverlayLabelsOpacity
+                    animateCardOpacity
                     containerStyle={styles.swiperContainer}
                     overlayLabels={{
                         left: {

@@ -1,8 +1,9 @@
-import { FIRESTORE_DB } from '../../firebaseConfig';
+import {FIRESTORE_DB} from '../../firebaseConfig';
 import {collection, getDocs, query, where} from 'firebase/firestore';
 import {Event} from '../utilities/interfaces';
+import {checkIfJoined} from "./eventParticipationService";
 
-
+// Fetch all events from Firestore
 export const fetchEvents = async (): Promise<Event[]> => {
     try {
         const eventsCollection = collection(FIRESTORE_DB, 'events');
@@ -17,6 +18,7 @@ export const fetchEvents = async (): Promise<Event[]> => {
     }
 };
 
+// Fetch events by user ID
 export const fetchEventsByUserId = async (userId: string): Promise<Event[]> => {
     try {
         const participantsCollection = collection(FIRESTORE_DB, 'eventParticipants');
@@ -43,6 +45,55 @@ export const fetchEventsByUserId = async (userId: string): Promise<Event[]> => {
     }
 };
 
+// Fetch upcoming events that the user has not joined
+export const fetchUpcomingEventsNotJoinedByUser = async (userId: string): Promise<Event[]> => {
+    try {
+        // Step 1: Fetch upcoming events from Firestore
+        const currentDate = new Date().toISOString(); // Convert to ISO 8601 string in UTC format
+        const eventsCollection = collection(FIRESTORE_DB, 'events');
+        const upcomingEventsQuery = query(eventsCollection, where('date', '>', currentDate));
+        const eventSnapshot = await getDocs(upcomingEventsQuery);
+
+        // Step 2: Filter out events the user has joined
+        const eventPromises = eventSnapshot.docs.map(async (doc) => {
+            const eventId = doc.id;
+            const joined = await checkIfJoined(eventId, userId); // Check if the user has joined the event
+            if (!joined) {
+                return {
+                    id: doc.id,
+                    ...doc.data(),
+                } as Event;
+            }
+            return null; // Return null if user has joined the event
+        });
+
+        // Wait for all event join checks to complete, and filter out nulls
+        return (await Promise.all(eventPromises)).filter(Boolean) as Event[];
+    } catch (error) {
+        console.error("Error fetching upcoming events not joined by user:", error);
+        return [];
+    }
+};
+
+// Fetch only upcoming events (not passed)
+export const fetchUpcomingEvents = async (): Promise<Event[]> => {
+    try {
+        const currentDate = new Date().toISOString(); //Convert to ISO 8601 string in UTC format, same as the date format in Firestore
+        const eventsCollection = collection(FIRESTORE_DB, 'events');
+        const upcomingEventsQuery = query(eventsCollection, where('date', '>', currentDate));
+        const eventSnapshot = await getDocs(upcomingEventsQuery);
+
+        return eventSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as Event[];
+    } catch (error) {
+        console.error("Error fetching upcoming events: ", error);
+        return [];
+    }
+};
+
+// Add distance to events based on user location
 export const addDistanceToEvents = (events: Event[], userLat: number, userLon: number): Event[] => {
     return events.map(event => {
         const distanceInMeters = calculateDistance(userLat, userLon, event.latitude, event.longitude);
@@ -56,7 +107,7 @@ export const addDistanceToEvents = (events: Event[], userLat: number, userLon: n
     });
 };
 
-
+// Calculate distance between two coordinates
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Radius of Earth in kilometers
     const dLat = (lat2 - lat1) * (Math.PI / 180);

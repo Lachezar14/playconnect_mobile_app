@@ -42,4 +42,9 @@ export interface UserStats {
     userRating: string;
 }
 
+export interface Participant {
+    id: string;
+    firstName: string;
+    lastName: string;
+}
 // You can add more interfaces or types here as needed

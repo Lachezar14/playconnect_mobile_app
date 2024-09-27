@@ -25,6 +25,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
 
     // Format the Firestore date into a Date object
     const eventDateTime = new Date(event.date);
+    const currentDate = new Date();
+    const isEventInPast = eventDateTime < currentDate;
 
     // Format the time and date
     const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'});
@@ -47,20 +49,25 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     };
 
     return (
-        <TouchableOpacity onPress={() => navigation.navigate(targetPage, { event })}>
-            <View style={styles.card}>
+        <TouchableOpacity
+            onPress={() => !isEventInPast && navigation.navigate(targetPage, { event })}
+            disabled={isEventInPast}
+        >
+            <View style={[styles.card, isEventInPast && styles.disabledCard]}>
                 <Image
                     source={{ uri: getSportImage(event.sportType) }}
-                    style={styles.image}
+                    style={[styles.image, isEventInPast && styles.greyedImage]}
                 />
                 <View style={styles.cardContent}>
-                    <Text style={styles.title}>{event.title}</Text>
+                    <Text style={[styles.title, isEventInPast && styles.greyedText]}>{event.title}</Text>
                     <View style={styles.row}>
-                        <Text style={styles.time}>
+                        <Text style={[styles.time, isEventInPast && styles.greyedText]}>
                             {formattedTime} / {formattedDate}
                         </Text>
                         {event.distance && (
-                            <Text style={styles.distance}>{event.distance}</Text>
+                            <Text style={[styles.distance, isEventInPast && styles.greyedText]}>
+                                {event.distance}
+                            </Text>
                         )}
                     </View>
                 </View>
@@ -109,5 +116,14 @@ const styles = StyleSheet.create({
     distance: {
         fontSize: 14,
         color: '#888',
+    },
+    greyedText: {
+        color: '#888',  // Grey text for past events
+    },
+    greyedImage: {
+        opacity: 0.5,  // Makes the image greyed-out
+    },
+    disabledCard: {
+        backgroundColor: '#e0e0e0',  // Greyed-out background for past events
     },
 });

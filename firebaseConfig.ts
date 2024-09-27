@@ -10,7 +10,7 @@ import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+const firebaseConfig_dev = {
   apiKey: "AIzaSyBkK8O6nQy3LKWJrdeC29e5W0NYUMcY9F0",
   authDomain: "playconnect-c2329.firebaseapp.com",
   projectId: "playconnect-c2329",
@@ -20,8 +20,19 @@ const firebaseConfig = {
   measurementId: "G-CVFE9MVH0J"
 };
 
+const firebaseConfig_prod = {
+  apiKey: "AIzaSyAJm94D2L2R9mRvYIhiOd0XkqzLuTUeeis",
+  authDomain: "playconnect-prod.firebaseapp.com",
+  projectId: "playconnect-prod",
+  storageBucket: "playconnect-prod.appspot.com",
+  messagingSenderId: "488147937021",
+  appId: "1:488147937021:web:ffdb49940d29360f1f4094",
+  measurementId: "G-HSLYENKK3Y"
+};
+
 // Initialize Firebase
-export const FIREBASE_APP = initializeApp(firebaseConfig);
+export const FIREBASE_APP = initializeApp(firebaseConfig_dev);
+//export const FIREBASE_APP = initializeApp(firebaseConfig_prod);
 
 // Initialize Auth with AsyncStorage persistence
 initializeAuth(FIREBASE_APP, {
