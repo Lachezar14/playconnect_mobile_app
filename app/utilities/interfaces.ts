@@ -47,4 +47,14 @@ export interface Participant {
     firstName: string;
     lastName: string;
 }
+
+export interface Suggestion {
+    place_id: string;
+    street: string;
+    streetNumber: string;
+    city: string;
+    postcode: string;
+    latitude: number;
+    longitude: number;
+}
 // You can add more interfaces or types here as needed

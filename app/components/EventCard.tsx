@@ -1,8 +1,11 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Event } from '../utilities/interfaces';
+import {Ionicons} from "@expo/vector-icons";
+import {useAuth} from "../context/AuthContext";
+import {isEventLiked, likeEvent, unlikeEvent} from "../services/userLikedEventsService";
 
 // Define the navigation stack types
 type RootStackParamList = {
@@ -22,6 +25,8 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     const navigation = useNavigation<EventCardNavigationProp>();
+    const [isLiked, setIsLiked] = useState(false);
+    const { user } = useAuth();
 
     // Format the Firestore date into a Date object
     const eventDateTime = new Date(event.date);
@@ -48,6 +53,38 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
         }
     };
 
+    useEffect(() => {
+        const checkIfLiked = async () => {
+            if (user) {
+                try {
+                    const liked = await isEventLiked(user.uid, event.id);
+                    setIsLiked(liked);
+                } catch (error) {
+                    console.error('Error checking if event is liked:', error);
+                }
+            }
+        };
+        checkIfLiked();
+    }, [event.id, user]);
+
+    const handleLikeEvent = async () => {
+        if (user) {
+            try {
+                if (isLiked) {
+                    // Unlike the event
+                    await unlikeEvent(user.uid, event.id); // Pass event id or doc ID
+                    setIsLiked(false);
+                } else {
+                    // Like the event
+                    await likeEvent(user.uid, event.id);
+                    setIsLiked(true);
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+    };
+
     return (
         <TouchableOpacity
             onPress={() => !isEventInPast && navigation.navigate(targetPage, { event })}
@@ -58,6 +95,17 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
                     source={{ uri: getSportImage(event.sportType) }}
                     style={[styles.image, isEventInPast && styles.greyedImage]}
                 />
+                {/* Icon button */}
+                <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={handleLikeEvent}
+                >
+                    <Ionicons
+                        name="heart"
+                        size={24}
+                        color={isLiked ? 'red' : 'gray'}
+                    />
+                </TouchableOpacity>
                 <View style={styles.cardContent}>
                     <Text style={[styles.title, isEventInPast && styles.greyedText]}>{event.title}</Text>
                     <View style={styles.row}>
@@ -125,5 +173,11 @@ const styles = StyleSheet.create({
     },
     disabledCard: {
         backgroundColor: '#e0e0e0',  // Greyed-out background for past events
+    },
+    iconButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'transparent',
     },
 });

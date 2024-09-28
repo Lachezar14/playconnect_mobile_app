@@ -1,11 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import EventsStack from './stack/EventsStack';
 import CreateEvent from '../screen/CreateEvent';
 import ProfileStack from './stack/ProfileStack';
 import { Platform } from "react-native";
 import QuickJoinStack from "./stack/QuickJoinStack";
+import UserLikedEvents from "../screen/UserLikedEvents";
 
 const Tab = createBottomTabNavigator();
 
@@ -37,7 +38,7 @@ export default function MainTabNavigator() {
                 name="EventsTab"
                 component={EventsStack}
                 options={{
-                    title: 'Explore',
+                    title: 'Discover',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="compass" size={24} color={color} />
                 }}
             />
@@ -47,6 +48,14 @@ export default function MainTabNavigator() {
                 options={{
                     title: 'Create',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'plus-circle'} size={24} color={color} />
+                }}
+            />
+            <Tab.Screen
+                name="UserLikedEvents"
+                component={UserLikedEvents}
+                options={{
+                    title: 'Favourite',
+                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'heart'} size={24} color={color} />
                 }}
             />
             <Tab.Screen

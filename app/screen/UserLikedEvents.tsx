@@ -4,28 +4,28 @@ import { useFocusEffect } from '@react-navigation/native';
 import EventCard from '../components/EventCard';  // Assuming you already created this component
 import { useAuth } from '../context/AuthContext';
 import {getUserLocation} from "../services/locationService";
-import {addDistanceToEvents, fetchEventsJoinedByUserID} from "../services/eventService";
+import {addDistanceToEvents, fetchUserLikedEvents} from "../services/eventService";
 import { Event } from '../utilities/interfaces';
 
 // JoinedEvents component to render the list of joined events
-const JoinedEvents = () => {
-    const [joinedEvents, setJoinedEvents] = useState<Event[]>([]);
+const UserLikedEvents = () => {
+    const [likedEvents, setLikedEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const { user } = useAuth();
 
-    const fetchJoinedEvents = useCallback(async () => {
+    const handleLikedEvents = useCallback(async () => {
         if (!user) return;
 
         try {
             setLoading(true);
             const userLocation = await getUserLocation();
-            let fetchedEvents = await fetchEventsJoinedByUserID(user.uid);
+            let fetchedEvents = await fetchUserLikedEvents(user.uid);
 
             if (userLocation) {
                 fetchedEvents = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
             }
 
-            setJoinedEvents(fetchedEvents);
+            setLikedEvents(fetchedEvents);
         } catch (error) {
             console.error("Error fetching joined events: ", error);
         } finally {
@@ -35,8 +35,8 @@ const JoinedEvents = () => {
 
     useFocusEffect(
         useCallback(() => {
-            fetchJoinedEvents();
-        }, [fetchJoinedEvents])
+            handleLikedEvents();
+        }, [handleLikedEvents])
     );
 
     if (loading) {
@@ -50,9 +50,9 @@ const JoinedEvents = () => {
 
     return (
         <View style={styles.container}>
-            {joinedEvents.length > 0 ? (
+            {likedEvents.length > 0 ? (
                 <FlatList
-                    data={joinedEvents}
+                    data={likedEvents}
                     renderItem={({ item }) => (
                         <EventCard
                             event={item}
@@ -69,7 +69,7 @@ const JoinedEvents = () => {
     );
 };
 
-export default JoinedEvents;
+export default UserLikedEvents;
 
 const styles = StyleSheet.create({
     container: {

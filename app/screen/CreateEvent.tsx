@@ -6,16 +6,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import { useAuth } from '../context/AuthContext';
 import LocationInput from "../components/LocationInput";
+import {Suggestion} from "../utilities/interfaces";
+import {createEvent} from "../services/eventService";
 
-interface Suggestion {
-    place_id: string;
-    street: string;
-    streetNumber: string;
-    city: string;
-    postcode: string;
-    latitude: number;
-    longitude: number;
-}
 
 const CreateEvent = () => {
     const { user } = useAuth();
@@ -35,55 +28,35 @@ const CreateEvent = () => {
     const [showTimePicker, setShowTimePicker] = useState(false);
 
     // Function to save event to Firestore
-    const createEvent = async () => {
+    const handleCreateEvent = async () => {
         if (!title || !date || !time || !location || !spots) {
             Alert.alert('Please fill out all fields');
             return;
         }
 
-        // Combine the date and time into a single Date object and convert to UTC
-        const eventDateTime = moment(date)
-            .set({
-                hour: moment(time).hour(),
-                minute: moment(time).minute(),
-            })
-            .utc();
-
-        // Format the event date and time for storage
-        const formattedDateTimeUTC = eventDateTime.format();
-        const formattedLocalTime = eventDateTime.local().format('HH:mm');
-
         try {
-            // Add new event to Firestore
-            const eventCollection = collection(FIRESTORE_DB, 'events');
-            await addDoc(eventCollection, {
-                userId: user?.uid,
+            await createEvent(
+                user?.uid || '',
                 title,
-                date: formattedDateTimeUTC,
+                date,
+                time,
+                location,
                 sportType,
-                spots: parseInt(spots),
-                takenSpots: 0,
-                street: location?.street,
-                streetNumber: location?.streetNumber,
-                city: location?.city,
-                postcode: location?.postcode,
-                latitude: Number(location?.latitude),
-                longitude: Number(location?.longitude),
-            });
+                parseInt(spots)
+            );
 
             // Success message
             Alert.alert('Event created successfully!');
 
-            // Clear form inputs after successful event creation
+            // Clear form inputs
             setTitle('');
             setDate(undefined);
             setTime(undefined);
             setLocation(null);
             setSportType('');
             setSpots('');
-            setShouldResetLocation(true); // Set reset flag to true
+            setShouldResetLocation(true);
         } catch (error) {
-            console.error('Error adding event: ', error);
             Alert.alert('Error creating event, please try again');
         }
     };
@@ -161,7 +134,7 @@ const CreateEvent = () => {
                 keyboardType="numeric"
             />
 
-            <Button title="Create Event" onPress={createEvent} />
+            <Button title="Create Event" onPress={handleCreateEvent} />
         </View>
     );
 };
