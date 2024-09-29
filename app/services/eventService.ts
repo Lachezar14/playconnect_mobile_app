@@ -20,7 +20,7 @@ export const fetchEvents = async (): Promise<Event[]> => {
     }
 };
 
-// Fetch events by user ID
+// Fetch events joined by the current user
 export const fetchEventsJoinedByUserID = async (userId: string): Promise<Event[]> => {
     try {
         const participantsCollection = collection(FIRESTORE_DB, 'eventParticipants');
@@ -47,8 +47,25 @@ export const fetchEventsJoinedByUserID = async (userId: string): Promise<Event[]
     }
 };
 
+// Fetch events created by the current user
+export const fetchEventsCreatedByUser = async (userId: string): Promise<Event[]> => {
+    try {
+        const eventsCollection = collection(FIRESTORE_DB, 'events');
+        const eventsQuery = query(eventsCollection, where('userId', '==', userId));
+        const eventSnapshot = await getDocs(eventsQuery);
+
+        return eventSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as Event[];
+    } catch (error) {
+        console.error("Error fetching events created by user:", error);
+        return [];
+    }
+};
+
 // Fetch liked events by user
-export const fetchUserLikedEvents = async (userId: string): Promise<Event[]> => {
+export const fetchEventsLikedByUser = async (userId: string): Promise<Event[]> => {
     try {
         // Step 1: Get the event IDs of the liked events
         const likedEventIds = await getUserLikedEventIds(userId);

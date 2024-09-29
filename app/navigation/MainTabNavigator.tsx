@@ -7,6 +7,7 @@ import ProfileStack from './stack/ProfileStack';
 import { Platform } from "react-native";
 import QuickJoinStack from "./stack/QuickJoinStack";
 import UserLikedEvents from "../screen/UserLikedEvents";
+import MyTabs from "./TopTabNavigation";
 
 const Tab = createBottomTabNavigator();
 
@@ -51,11 +52,11 @@ export default function MainTabNavigator() {
                 }}
             />
             <Tab.Screen
-                name="UserLikedEvents"
-                component={UserLikedEvents}
+                name="MyTabs"
+                component={MyTabs}
                 options={{
-                    title: 'Favourite',
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'heart'} size={24} color={color} />
+                    title: 'My Events',
+                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'calendar-heart'} size={24} color={color} />
                 }}
             />
             <Tab.Screen

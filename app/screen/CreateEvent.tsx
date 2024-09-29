@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet, Text, Alert, Platform } from 'react-native';
+import {View, TextInput, Button, StyleSheet, Text, Alert, Platform, ScrollView} from 'react-native';
 import { FIRESTORE_DB } from '../../firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -77,7 +77,7 @@ const CreateEvent = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             <Text style={styles.label}>Event Title</Text>
             <TextInput
                 style={styles.input}
@@ -135,7 +135,7 @@ const CreateEvent = () => {
             />
 
             <Button title="Create Event" onPress={handleCreateEvent} />
-        </View>
+        </ScrollView>
     );
 };
 

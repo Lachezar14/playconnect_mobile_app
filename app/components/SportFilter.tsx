@@ -66,7 +66,7 @@ export default SportFilter;
 
 const styles = StyleSheet.create({
     container: {
-        paddingVertical: 8,
+        marginBottom: 16,
     },
     sportButton: {
         flexDirection: 'row',
@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#38A169',
     },
     sportText: {
+        margin: -2,
         fontSize: 14,
         color: '#333',
     },

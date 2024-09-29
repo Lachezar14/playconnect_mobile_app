@@ -121,7 +121,7 @@ const Profile = () => {
             {/* Action Items */}
             <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => navigation.navigate('JoinedEvents')}  // Navigate to JoinedEvents screen
+                // onPress={() => navigation.navigate('JoinedEvents')}  // Navigate to JoinedEvents screen
             >
                 <MaterialIcons name="event" size={24} color="black" />
                 <Text style={styles.menuText}>My Events</Text>

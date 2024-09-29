@@ -20,17 +20,17 @@ export default function ProfileStack() {
                 component={Profile}
                 options={{ title: 'Profile', headerShown: false }}
             />
-            <Stack.Screen
-                name="JoinedEvents"
-                component={JoinedEvents}
-                options={{ title: 'Joined Events' }}
-            />
-            <Stack.Screen
-                name="JoinedEventsDetails"
-                // @ts-ignore
-                component={JoinedEventsDetails} // Add the new screen
-                options={{ title: 'Event Details' }} // Optional title
-            />
+            {/*<Stack.Screen*/}
+            {/*    name="JoinedEvents"*/}
+            {/*    component={JoinedEvents}*/}
+            {/*    options={{ title: 'Joined Events' }}*/}
+            {/*/>*/}
+            {/*<Stack.Screen*/}
+            {/*    name="JoinedEventsDetails"*/}
+            {/*    // @ts-ignore*/}
+            {/*    component={JoinedEventsDetails} // Add the new screen*/}
+            {/*    options={{ title: 'Event Details' }} // Optional title*/}
+            {/*/>*/}
         </Stack.Navigator>
     );
 }
