@@ -7,7 +7,6 @@ import {getUserLocation} from "../services/locationService";
 import { addDistanceToEvents, fetchEventsCreatedByUser } from "../services/eventService";
 import { Event } from '../utilities/interfaces';
 
-// JoinedEvents component to render the list of joined events
 const UserCreatedEvents = () => {
     const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -39,14 +38,15 @@ const UserCreatedEvents = () => {
         }, [fetchCreatedEvents])
     );
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0000ff" />
-                <Text>Loading Joined Events...</Text>
-            </View>
-        );
-    }
+    // Triggers loading state everytime the page is open, too buggy
+    // if (loading) {
+    //     return (
+    //         <View style={styles.loadingContainer}>
+    //             <ActivityIndicator size="large" color="#0000ff" />
+    //             <Text>Loading Joined Events...</Text>
+    //         </View>
+    //     );
+    // }
 
     return (
         <View style={styles.container}>

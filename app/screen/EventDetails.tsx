@@ -239,14 +239,14 @@ const styles = StyleSheet.create({
     },
     joinButton: {
         backgroundColor: '#33A02C',
-        borderRadius: 8,
-        paddingVertical: 12,
+        borderRadius: 22,
+        paddingVertical: 14,
         alignItems: 'center',
     },
     leaveButton: {
         backgroundColor: '#d9534f',
-        borderRadius: 8,
-        paddingVertical: 12,
+        borderRadius: 22,
+        paddingVertical: 14,
         alignItems: 'center',
     },
 });

@@ -1,6 +1,5 @@
-import React, {useCallback, useState} from 'react';
-import {View, Text, FlatList, StyleSheet, ActivityIndicator} from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl} from 'react-native';
 import EventCard from "../components/EventCard";
 import SearchFilter from "../components/SearchFilter";
 import SportFilter from "../components/SportFilter";
@@ -13,9 +12,9 @@ const Events = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
     const [sports, setSports] = useState<string[]>([]);
 
-    // Fetch events from Firestore
     const loadEvents = useCallback(async () => {
         try {
             setLoading(true);
@@ -38,11 +37,15 @@ const Events = () => {
         }
     }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            loadEvents();
-        }, [loadEvents])
-    );
+    useEffect(() => {
+        loadEvents();
+    }, []);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await loadEvents();
+        setRefreshing(false);
+    }, [loadEvents]);
 
     // Search and Filter Logic
     const handleSearch = (title: string) => {
@@ -80,14 +83,15 @@ const Events = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0000ff" />
-                <Text>Loading Events...</Text>
-            </View>
-        );
-    }
+    // Triggers loading state everytime the page is open, too buggy
+    // if (loading) {
+    //     return (
+    //         <View style={styles.loadingContainer}>
+    //             <ActivityIndicator size="large" color="#0000ff" />
+    //             <Text>Loading Events...</Text>
+    //         </View>
+    //     );
+    // }
 
     return (
         <View style={styles.container}>
@@ -98,11 +102,17 @@ const Events = () => {
                 renderItem={({ item }) => (
                     <EventCard
                         event={item}
-                        targetPage="EventDetails"  // Specify the target page for events
+                        targetPage="EventDetails"
                     />
                 )}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
             />
         </View>
     );
@@ -113,7 +123,8 @@ export default Events;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingTop: 16,
         backgroundColor: '#fff',
     },
     loadingContainer: {
