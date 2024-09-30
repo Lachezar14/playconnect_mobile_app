@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Events from '../../screen/Events';
 import EventDetails from '../../screen/EventDetails';
+import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
 
 export type EventStackParamList = {
     Events: undefined;
@@ -10,7 +11,16 @@ export type EventStackParamList = {
 
 const Stack = createNativeStackNavigator<EventStackParamList>();
 
-export default function EventsStack() {
+export default function EventsStack({navigation, route}: any) {
+    React.useLayoutEffect(() => {
+        const routeName = getFocusedRouteNameFromRoute(route);
+        if (routeName === "EventDetails") {
+            navigation.setOptions({tabBarStyle: {display: 'none'}});
+        }else {
+            navigation.setOptions({tabBarStyle: {display: 'flex'}});
+        }
+    }, [navigation, route]);
+
     return (
         <Stack.Navigator>
             <Stack.Screen

@@ -123,8 +123,8 @@ const Profile = () => {
                 style={styles.menuItem}
                 // onPress={() => navigation.navigate('JoinedEvents')}  // Navigate to JoinedEvents screen
             >
-                <MaterialIcons name="event" size={24} color="black" />
-                <Text style={styles.menuText}>My Events</Text>
+                <MaterialCommunityIcons name="chart-line" size={24} color="black" />
+                <Text style={styles.menuText}>My Stats</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem}>

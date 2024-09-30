@@ -2,8 +2,12 @@ import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Button} from 'react-native';
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import { useAuth } from '../context/AuthContext';
-import {Event, Participant} from '../utilities/interfaces';
+import {Event, Participant, User, UserStats} from '../utilities/interfaces';
 import {eventLeave, eventJoin, checkIfJoined, fetchParticipants} from "../services/eventParticipationService";
+import {fetchUserById, fetchUserStats} from "../services/userService";
+import {Feather, MaterialCommunityIcons} from "@expo/vector-icons";
+import OpenInMapsButton from "../components/OpenGoogleMapsButton";
+import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -19,8 +23,36 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     const [isJoined, setIsJoined] = useState<boolean>(false); // State to track if the user has joined
     const [loading, setLoading] = useState<boolean>(true); // State to track loading
     const [participants, setParticipants] = useState<Participant[]>([]); // For real participant data
+    const [eventCreator, setEventCreator] = useState<User | null>(null);
+    console.log('Event organizer:', eventCreator);
+    const [creatorStats, setCreatorStats] = useState<UserStats | null>(null);
+    console.log('Event organizer stats:', creatorStats);
 
     const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
+
+    // Fetch event organizer
+    useEffect(() => {
+        const fetchEventOrganizer = async () => {
+            try {
+                // Fetch event creator details
+                const creatorData = await fetchUserById(event.userId);
+                setEventCreator(creatorData);
+
+                // Fetch event creator stats
+                if (creatorData) {
+                    const creatorStatsData = await fetchUserStats(event.userId);
+                    setCreatorStats(creatorStatsData);
+                }
+
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching event details:', error);
+                setLoading(false);
+            }
+        };
+
+        fetchEventOrganizer();
+    }, [event.id, event.userId]);
 
     // Fetch participants and their user details
     const handleFetchParticipants = async () => {
@@ -92,6 +124,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
         }
     };
 
+    const handleGoToMyEvents = () => {
+        // @ts-ignore
+        navigation.navigate('MyTabs', { screen: 'MyEvents' });
+    };
+
     useEffect(() => {
         handleCheckIfJoined(); // Check if the user is already registered when the component mounts
         handleFetchParticipants(); // Fetch the participants list
@@ -119,136 +156,281 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Image
-                source={{ uri: getSportImage(event.sportType) }}
-                style={styles.image}
-            />
+        <View style={styles.container}>
+            <ScrollView style={styles.scrollView}>
+                <Image
+                    source={{ uri: getSportImage(event.sportType) }}
+                    style={styles.image}
+                />
 
-            <View style={styles.detailsContainer}>
-                <Text style={styles.eventTitle}>{event.title}</Text>
-                <Text style={styles.eventDate}>{formattedTime} / {formattedDate}</Text>
-                <Text style={styles.eventDescription}>
-                    Are you a padel enthusiast? Do you want to play but don’t have a buddy? Fear not!
-                    Come to the SportsCentrum Arena and take part in one of the best padel tournaments for
-                    professional and enthusiast padel players.
-                </Text>
-                <Text style={styles.eventLocation}>Address: {event.street} {event.streetNumber}, {event.city}, {event.postcode}</Text>
+                <View style={styles.detailsContainer}>
+                    {/* Event Title and Joined Badge */}
+                    <View style={styles.eventHeader}>
+                        <Text style={styles.eventTitle}>{event.title}</Text>
+                        {isJoined && (
+                            <View style={styles.badgeContainer}>
+                                <Text style={styles.badgeText}>Joined</Text>
+                            </View>
+                        )}
+                    </View>
 
-                <Text style={styles.participantsLabel}>Participants:</Text>
-                <View style={styles.participantsContainer}>
-                    {participants.map((participant) => (
-                        <View key={participant.id} style={styles.participant}>
-                            <Text style={styles.participantName}>{participant.firstName}</Text>
-                        </View>
-                    ))}
-                </View>
-
-                {
-                    availableSpots> 1 && availableSpots <= 5
-                        ? <Text style={styles.remainingSpots}>
-                            Only {availableSpots} spots remaining!
-                        </Text>
-                        : availableSpots == 1 ?
-                        <Text style={styles.remainingSpots}>
-                            Only 1 spot remaining!
-                        </Text>
-                            : null
-                }
-
-                {/* Render join/leave button based on the user's status */}
-                <TouchableOpacity
-                    style={isJoined ? styles.leaveButton : styles.joinButton}
-                    onPress={isJoined ? handleEventLeave : handleEventJoin}
-                >
-                    <Text style={styles.buttonText}>
-                        {isJoined ? "Leave Event" : "Join Event"}
+                    {/* Event Date and Description */}
+                    <Text style={styles.eventDate}>{formattedTime} / {formattedDate}</Text>
+                    <Text style={styles.eventDescription}>
+                        Are you a padel enthusiast? Do you want to play but don't have a buddy? Fear not!
+                        Come to the SportsCentrum Arena and take part in one of the best padel tournaments.
                     </Text>
-                </TouchableOpacity>
+
+                    {/* Location, Available Spots, and Sport Type */}
+                    <View style={styles.infoContainer}>
+                        <View style={styles.infoItem}>
+                            <MaterialCommunityIcons name="map-marker" size={35} color="#4A9F89" />
+                            <Text style={styles.infoText}>{event.distance || '795m'}</Text>
+                        </View>
+                        <View style={styles.divider} />
+                        <View style={styles.infoItem}>
+                            <MaterialCommunityIcons name="account-multiple" size={35} color="#4A9F89" />
+                            <Text style={styles.infoText}>{`${event.takenSpots || 0}/${event.spots}`}</Text>
+                        </View>
+                        <View style={styles.divider} />
+                        <View style={styles.infoItem}>
+                            <Feather name={'activity'} size={35} color="#4A9F89" />
+                            <Text style={styles.infoText}>{event.sportType}</Text>
+                        </View>
+                    </View>
+                    {/* Address and button to open in Google Maps */}
+                    <OpenGoogleMapsButton event={event} />
+
+                    {/* Organizer Details */}
+                    <View style={styles.organizerContainer}>
+                        <Text style={styles.organizerTitle}>Organizer</Text>
+                        <View style={styles.organizerInfo}>
+                            <Image
+                                source={{ uri: eventCreator?.profilePicture || 'https://via.placeholder.com/50' }}
+                                style={styles.organizerImage}
+                            />
+                            <View style={styles.organizerDetails}>
+                                <Text style={styles.organizerName}>{eventCreator?.firstName} {eventCreator?.lastName}</Text>
+                                <Text style={styles.organizerRating}>User Rating: ⭐ {creatorStats?.userRating}/5</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
+
+            {/* Fixed Join Event button at the bottom of the screen */}
+            <View style={styles.fixedButtonContainer}>
+                {loading ? (
+                    <View style={styles.skeletonButton}>
+                        <Text style={styles.skeletonText}>Loading...</Text>
+                    </View>
+                ) : (
+                    <>
+                        {/* Show the available spots warning only if the user has not joined */}
+                        {!isJoined && availableSpots === 1 && (
+                            <Text style={styles.remainingSpotsFixed}>
+                                Only 1 place remaining!
+                            </Text>
+                        )}
+                        <TouchableOpacity
+                            style={isJoined ? styles.goToMyEventsButton : styles.joinButton}
+                            onPress={isJoined ? handleGoToMyEvents : handleEventJoin}
+                        >
+                            <View style={styles.buttonContent}>
+                                <Text style={styles.buttonText}>
+                                    {isJoined ? "Go to My Events" : "Join Event"}
+                                </Text>
+                                {!isJoined ? null : (
+                                    <Feather name="arrow-right" size={20} color="#fff" style={styles.arrowIcon} />
+                                )}
+                            </View>
+                        </TouchableOpacity>
+                    </>
+                )}
             </View>
-        </ScrollView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
+        flex: 1,
         backgroundColor: '#fff',
+    },
+    scrollView: {
+        flex: 1,
     },
     image: {
         width: '100%',
         height: 200,
     },
     detailsContainer: {
-        padding: 16,
+        padding: 20,
+        paddingBottom: 80, // Add extra padding at the bottom to account for the fixed button
     },
     eventTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 8,
+        color: '#000',
+        marginBottom: 5,
     },
     eventDate: {
         fontSize: 16,
-        color: '#33A02C',
-        marginBottom: 8,
+        color: '#4A9F89',
+        marginBottom: 10,
     },
     eventDescription: {
         fontSize: 16,
-        color: '#777',
-        marginBottom: 16,
+        color: '#666',
+        marginBottom: 20,
     },
-    eventLocation: {
-        fontSize: 14,
-        color: '#555',
-        marginBottom: 16,
-    },
-    participantsLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    participantsContainer: {
+    infoContainer: {
         flexDirection: 'row',
-        marginBottom: 16,
-    },
-    participant: {
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginRight: 16,
+        marginBottom: 20,
     },
-    participantName: {
-        marginTop: 4,
-        fontSize: 14,
-        color: '#333',
-    },
-    remainingSpots: {
-        color: '#d9534f',
-        fontSize: 14,
-        marginBottom: 16,
-    },
-    button: {
-        backgroundColor: '#33A02C',
-        borderRadius: 8,
-        paddingVertical: 12,
+    infoItem: {
+        flex: 1,
         alignItems: 'center',
     },
-    buttonText: {
-        color: '#fff',
+    infoText: {
+        marginTop: 5,
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+    },
+    divider: {
+        width: 1,
+        height: '100%',
+        backgroundColor: '#E0E0E0',
+    },
+    locationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+        marginBottom: 20,
+    },
+    locationText: {
+        fontSize: 14,
+        color: '#000',
+        flex: 1,
+    },
+    organizerContainer: {
+        marginBottom: 20,
+    },
+    organizerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    organizerInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    organizerImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 15,
+    },
+    organizerDetails: {
+        flex: 1,
+    },
+    organizerName: {
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    organizerRating: {
+        fontSize: 14,
+        color: '#666',
+    },
+    fixedButtonContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+    },
+    remainingSpotsFixed: {
+        color: '#FF6B6B',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
     },
     joinButton: {
-        backgroundColor: '#33A02C',
-        borderRadius: 22,
-        paddingVertical: 14,
+        backgroundColor: '#4A9F89',
+        borderRadius: 25,
+        paddingVertical: 15,
         alignItems: 'center',
     },
     leaveButton: {
         backgroundColor: '#d9534f',
-        borderRadius: 22,
-        paddingVertical: 14,
+        borderRadius: 25,
+        paddingVertical: 15,
         alignItems: 'center',
     },
+    goToMyEventsButton: {
+        backgroundColor: '#5cbbcf', // Gray color for the button
+        borderRadius: 25,
+        paddingVertical: 15,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    arrowIcon: {
+        marginLeft: 10, // Adds space between the text and the arrow icon
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    skeletonButton: {
+        backgroundColor: '#E0E0E0', // light gray for the skeleton
+        borderRadius: 25,
+        paddingVertical: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%', // make it full width like the original button
+    },
+    skeletonText: {
+        color: '#B0B0B0', // darker gray text for skeleton loading
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    eventHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    badgeContainer: {
+        backgroundColor: '#4A9F89', // green color for the badge
+        borderRadius: 12,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    badgeText: {
+        color: '#fff', // white text for better contrast
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+
 });
 
 export default EventDetails;

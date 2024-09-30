@@ -4,6 +4,7 @@ import EventDetails from '../../screen/EventDetails';
 import QuickJoin from "../../screen/QuickJoin";
 import {TouchableOpacity} from "react-native";
 import {Feather} from "@expo/vector-icons";
+import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
 
 export type QuickJoinStackParamList = {
     QuickJoin: undefined;
@@ -12,7 +13,17 @@ export type QuickJoinStackParamList = {
 
 const Stack = createNativeStackNavigator<QuickJoinStackParamList>();
 
-export default function QuickJoinStack() {
+export default function QuickJoinStack({navigation, route}: any) {
+    React.useLayoutEffect(() => {
+        const routeName = getFocusedRouteNameFromRoute(route);
+        if (routeName === "EventDetails") {
+            navigation.setOptions({tabBarStyle: {display: 'none'}});
+        }else {
+            navigation.setOptions({tabBarStyle: {display: 'flex'}});
+        }
+    }, [navigation, route]);
+
+
     return (
         <Stack.Navigator>
             <Stack.Screen
