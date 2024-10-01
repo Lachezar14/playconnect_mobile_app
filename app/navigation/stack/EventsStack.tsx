@@ -31,7 +31,7 @@ export default function EventsStack({navigation, route}: any) {
             <Stack.Screen
                 name="EventDetails"
                 component={EventDetails}
-                options={{ title: 'Event Details' }}
+                options={{ title: 'Event Details', headerShown: false }}
             />
         </Stack.Navigator>
     );

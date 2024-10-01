@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useAuth } from '../context/AuthContext';
-import {Event, Participant} from '../utilities/interfaces';
+import {User, Event, Participant, UserStats} from '../utilities/interfaces';
 import {
     checkIfCheckedIn,
     checkIfJoined,
@@ -11,6 +11,10 @@ import {
     fetchParticipants,
     updateCheckInStatus
 } from "../services/eventParticipationService";
+import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
+import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
+import {fetchUserById, fetchUserStats} from "../services/userService";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -20,7 +24,7 @@ type RootStackParamList = {
 // Define props using NativeStackScreenProps
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinedEventsDetails'>;
 
-const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
+const JoinedEventsDetails: React.FC<Props> = ({ route, navigation }) => {
     const { user } = useAuth();
     const { event } = route.params;
     const [isJoined, setIsJoined] = useState<boolean>(false);
@@ -28,7 +32,36 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [checkedIn, setCheckedIn] = useState<boolean>(false);
 
-    const availableSpots = event.spots - (event.takenSpots || 0);
+    const [eventCreator, setEventCreator] = useState<User | null>(null);
+    const [creatorStats, setCreatorStats] = useState<UserStats | null>(null);
+
+    const [isLeavingEvent, setIsLeavingEvent] = useState(false);
+
+    const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
+
+    // Fetch event organizer
+    useEffect(() => {
+        const fetchEventOrganizer = async () => {
+            try {
+                // Fetch event creator details
+                const creatorData = await fetchUserById(event.userId);
+                setEventCreator(creatorData);
+
+                // Fetch event creator stats
+                if (creatorData) {
+                    const creatorStatsData = await fetchUserStats(event.userId);
+                    setCreatorStats(creatorStatsData);
+                }
+
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching event details:', error);
+                setLoading(false);
+            }
+        };
+
+        fetchEventOrganizer();
+    }, [event.id, event.userId]);
 
     // Fetch participants and their user details
     const handleFetchParticipants = async () => {
@@ -64,25 +97,6 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
         }
     };
 
-    const handleEventJoin = async () => {
-        if (!event.id || !user?.uid) {
-            console.error('Event ID or User ID is undefined');
-            return;
-        }
-
-        try {
-            await eventJoin(event.id, user.uid);
-            setIsJoined(true);
-        } catch (error: Error | any) {
-            if (error.message === 'No more places available') {
-                Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');
-            } else {
-                console.error('Error joining event: ', error);
-                Alert.alert('Error joining event', 'An error occurred while trying to join the event. Please try again later.');
-            }
-        }
-    };
-
     // Unregister the user from the event
     const handleEventLeave = async () => {
         if (!event.id || !user?.uid) {
@@ -93,6 +107,7 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
         try {
             await eventLeave(event.id, user.uid);
             setIsJoined(false);
+            setIsLeavingEvent(false);
         } catch (error) {
             console.error('Error leaving event: ', error);
             Alert.alert('Error leaving event, please try again');
@@ -173,156 +188,389 @@ const JoinedEventsDetails: React.FC<Props> = ({ route }) => {
     const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Image
-                source={{ uri: getSportImage(event.sportType) }}
-                style={styles.image}
-            />
-
-            <View style={styles.detailsContainer}>
-                <Text style={styles.eventTitle}>{event.title}</Text>
-                <Text style={styles.eventDate}>{formattedTime} / {formattedDate}</Text>
-                <Text style={styles.eventDescription}>
-                    Are you a padel enthusiast? Do you want to play but don’t have a buddy? Fear not!
-                    Come to the SportsCentrum Arena and take part in one of the best padel tournaments for
-                    professional and enthusiast padel players.
-                </Text>
-                <Text style={styles.eventLocation}>Address: {event.street} {event.streetNumber}, {event.city}, {event.postcode}</Text>
-
-                <Text style={styles.participantsLabel}>Participants:</Text>
-                <View style={styles.participantsContainer}>
-                    {participants.map((participant) => (
-                        <View key={participant.id} style={styles.participant}>
-                            <Text style={styles.participantName}>{participant.firstName}</Text>
-                        </View>
-                    ))}
-                </View>
-
-                {availableSpots > 1 && availableSpots <= 5 && (
-                    <Text style={styles.remainingSpots}>
-                        Only {availableSpots} spots remaining!
-                    </Text>
-                )}
-                {availableSpots === 1 && (
-                    <Text style={styles.remainingSpots}>
-                        Only 1 spot remaining!
-                    </Text>
-                )}
-
+        <SafeAreaView style={styles.container}>
+            <ScrollView style={styles.scrollView}>
                 <TouchableOpacity
-                    style={isJoined ? styles.leaveButton : styles.joinButton}
-                    onPress={isJoined ? handleEventLeave : handleEventJoin}
-                >
-                    <Text style={styles.buttonText}>
-                        {isJoined ? "Leave Event" : "Join Event"}
-                    </Text>
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
+                <Image
+                    source={{ uri: getSportImage(event.sportType) }}
+                    style={styles.image}
+                />
 
-                {isJoined && (
+                <View style={styles.detailsContainer}>
+                    {/* Event Title and Joined Badge */}
+                    <View style={styles.eventHeader}>
+                        <Text style={styles.eventTitle}>{event.title}</Text>
+                        {isJoined && (
+                            <View style={styles.badgeContainer}>
+                                <Text style={styles.badgeText}>Joined</Text>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Event Date */}
+                    <Text style={styles.eventDate}>{formattedTime} / {formattedDate}</Text>
+
+                    {/* Location, Available Spots, and Sport Type */}
+                    <View style={styles.infoContainer}>
+                            {checkedIn ? (
+                                    <View style={styles.infoItem}>
+                                        <Feather name="check-circle" size={35} color="#4A9F89" />
+                                        <Text style={styles.infoText}>Checked-In</Text>
+                                    </View>
+                            ) : (
+                                <View style={styles.infoItem}>
+                                    <Feather name="loader" size={35} color="#666" />
+                                    <Text style={styles.infoText}>Pending Check-In</Text>
+                                </View>
+                            )}
+                        <View style={styles.divider} />
+                        <View style={styles.infoItem}>
+                            <MaterialCommunityIcons name="map-marker" size={35} color="#4A9F89" />
+                            <Text style={styles.infoText}>{event.distance || '795m'}</Text>
+                        </View>
+                        <View style={styles.divider} />
+                        <View style={styles.infoItem}>
+                            <Feather name={'activity'} size={35} color="#4A9F89" />
+                            <Text style={styles.infoText}>{event.sportType}</Text>
+                        </View>
+                    </View>
+
+                    {/* Address and button to open in Google Maps */}
+                    <OpenGoogleMapsButton event={event} />
+
+                    {/* More Info Section */}
+                    <View style={styles.organizerContainer}>
+                        <Text style={styles.organizerTitle}>More Info</Text>
+                        <Text style={styles.eventDescription}>
+                            Are you a padel enthusiast? Do you want to play but don't have a buddy? Fear not!
+                            Come to the SportsCentrum Arena and take part in one of the best padel tournaments.
+                        </Text>
+                    </View>
+
+                    {/* Simple Divider */}
+                    <View style={styles.divider2} />
+
+                    {/* Participants Section */}
+                    <View style={styles.organizerContainer}>
+                        <Text style={styles.organizerTitle}>Participants</Text>
+                    </View>
+
+                    {/* Simple Divider */}
+                    <View style={styles.divider2} />
+
+                    {/* Organizer Details */}
+                    <View style={styles.organizerContainer}>
+                        <Text style={styles.organizerTitle}>Organizer</Text>
+                        <View style={styles.organizerInfo}>
+                            <Image
+                                source={{ uri: 'https://via.placeholder.com/50' }}
+                                style={styles.organizerImage}
+                            />
+                            <View style={styles.organizerDetails}>
+                                <Text style={styles.organizerName}>{eventCreator?.firstName} {eventCreator?.lastName}</Text>
+                                <Text style={styles.organizerRating}>User Rating: ⭐ {creatorStats?.userRating}/5</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Leave Event Section */}
+                    {isJoined && (
+                        <View style={styles.leaveEventContainer}>
+                            <Text style={styles.sectionTitle}>Leave Event</Text>
+                            <Text style={styles.warningText}>
+                                If you leave the event, there's no going back. Your spot will be made available to other participants.
+                            </Text>
+                            <TouchableOpacity
+                                style={[
+                                    styles.leaveButton,
+                                    isLeavingEvent ? styles.leaveButtonPressed : styles.leaveButtonNormal
+                                ]}
+                                onPress={() => {
+                                    setIsLeavingEvent(true);
+                                    Alert.alert(
+                                        "Leave Event",
+                                        "Are you sure you want to leave this event?",
+                                        [
+                                            {
+                                                text: "Cancel",
+                                                onPress: () => setIsLeavingEvent(false),
+                                                style: "cancel"
+                                            },
+                                            {
+                                                text: "Yes, Leave",
+                                                onPress: handleEventLeave
+                                            }
+                                        ]
+                                    );
+                                }}
+                            >
+                                <Text style={[
+                                    styles.leaveButtonText,
+                                    isLeavingEvent ? styles.leaveButtonTextPressed : styles.leaveButtonTextNormal
+                                ]}>
+                                    Leave Event
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+
+            {/* Fixed Check In button at the bottom of the screen */}
+            <View style={styles.fixedButtonContainer}>
+                {loading ? (
+                    <View style={styles.skeletonButton}>
+                        <Text style={styles.skeletonText}>Loading...</Text>
+                    </View>
+                ) : (
                     <TouchableOpacity
-                        style={[
-                            styles.checkInButton,
-                            (!isCheckInEnabled() || checkedIn) && styles.disabledButton
-                        ]}
+                        style={[styles.checkInButton, (!isJoined || checkedIn) && styles.disabledButton]}
                         onPress={handleCheckIn}
+                        disabled={!isJoined || checkedIn}
                     >
                         <Text style={styles.buttonText}>
-                            {checkedIn ? "Already Checked In" : "Check In"}
+                            {checkedIn ? "Checked In" : "Check In"}
                         </Text>
                     </TouchableOpacity>
                 )}
             </View>
-        </ScrollView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
+        flex: 1,
         backgroundColor: '#fff',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
+    },
+    scrollView: {
+        flex: 1,
     },
     image: {
         width: '100%',
         height: 200,
     },
     detailsContainer: {
-        padding: 16,
+        padding: 20,
+        paddingBottom: 50, // Add extra padding at the bottom to account for the fixed button
     },
     eventTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 8,
+        color: '#000',
+        marginBottom: 5,
     },
     eventDate: {
-        fontSize: 16,
-        color: '#33A02C',
-        marginBottom: 8,
+        fontSize: 17,
+        color: '#4A9F89',
+        marginBottom: 20,
     },
     eventDescription: {
         fontSize: 16,
-        color: '#777',
-        marginBottom: 16,
+        color: '#666',
+        marginBottom: 20,
     },
-    eventLocation: {
+    infoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    infoItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    infoText: {
+        marginTop: 5,
         fontSize: 14,
-        color: '#555',
-        marginBottom: 16,
+        color: '#666',
+        textAlign: 'center',
+        paddingHorizontal: 10,
     },
-    participantsLabel: {
+    divider: {
+        width: 1,
+        height: '100%',
+        backgroundColor: '#E0E0E0',
+    },
+    locationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+        marginBottom: 20,
+    },
+    locationText: {
+        fontSize: 14,
+        color: '#000',
+        flex: 1,
+    },
+    organizerContainer: {
+    },
+    organizerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    organizerInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    organizerImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 15,
+    },
+    organizerDetails: {
+        flex: 1,
+    },
+    organizerName: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 8,
     },
-    participantsContainer: {
-        flexDirection: 'row',
-        marginBottom: 16,
+    organizerRating: {
+        fontSize: 14,
+        color: '#666',
     },
-    participant: {
+    fixedButtonContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+    },
+    checkInReminder: {
+        color: 'gray',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    goToMyEventsButton: {
+        backgroundColor: '#5cbbcf', // Gray color for the button
+        borderRadius: 25,
+        paddingVertical: 15,
         alignItems: 'center',
-        marginRight: 16,
-    },
-    participantName: {
-        marginTop: 4,
-        fontSize: 14,
-        color: '#333',
-    },
-    remainingSpots: {
-        color: '#d9534f',
-        fontSize: 14,
-        marginBottom: 16,
-    },
-    joinButton: {
-        backgroundColor: '#5cb85c',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 10,
-    },
-    leaveButton: {
-        backgroundColor: '#d9534f',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 10,
-    },
-    checkedInContainer: {
-        backgroundColor: '#ccc',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 10,
     },
     buttonText: {
         color: '#fff',
-        textAlign: 'center',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    arrowIcon: {
+        marginLeft: 10, // Adds space between the text and the arrow icon
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    skeletonButton: {
+        backgroundColor: '#E0E0E0', // light gray for the skeleton
+        borderRadius: 25,
+        paddingVertical: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%', // make it full width like the original button
+    },
+    skeletonText: {
+        color: '#B0B0B0', // darker gray text for skeleton loading
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    eventHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    badgeContainer: {
+        backgroundColor: '#4A9F89', // green color for the badge
+        borderRadius: 12,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    badgeText: {
+        color: '#fff', // white text for better contrast
+        fontSize: 12,
         fontWeight: 'bold',
     },
     checkInButton: {
-        backgroundColor: '#007bff',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 10,
+        backgroundColor: '#4A9F89',
+        borderRadius: 25,
+        paddingVertical: 15,
+        alignItems: 'center',
     },
     disabledButton: {
-        backgroundColor: '#cccccc',
+        backgroundColor: '#A0A0A0',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    leaveEventContainer: {
+        marginTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+        paddingTop: 20,
+        marginBottom: 50,
+    },
+    warningText: {
+        fontSize: 15,
+        color: '#666',
+        marginBottom: 15,
+    },
+    leaveButton: {
+        borderRadius: 25,
+        paddingVertical: 15,
+        alignItems: 'center',
+        borderWidth: 2,
+    },
+    leaveButtonNormal: {
+        backgroundColor: 'white',
+        borderColor: '#d9534f',
+    },
+    leaveButtonPressed: {
+        backgroundColor: '#d9534f',
+        borderColor: '#d9534f',
+    },
+    leaveButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    leaveButtonTextNormal: {
+        color: '#d9534f',
+    },
+    leaveButtonTextPressed: {
+        color: 'white',
+    },
+    divider2: {
+        height: 1,
+        backgroundColor: '#E0E0E0',
+        marginBottom: 20,
     },
 });
 

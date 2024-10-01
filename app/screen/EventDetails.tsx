@@ -5,9 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import {Event, Participant, User, UserStats} from '../utilities/interfaces';
 import {eventLeave, eventJoin, checkIfJoined, fetchParticipants} from "../services/eventParticipationService";
 import {fetchUserById, fetchUserStats} from "../services/userService";
-import {Feather, MaterialCommunityIcons} from "@expo/vector-icons";
+import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import OpenInMapsButton from "../components/OpenGoogleMapsButton";
 import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -156,8 +157,13 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <ScrollView style={styles.scrollView}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color="white" />
+                </TouchableOpacity>
                 <Image
                     source={{ uri: getSportImage(event.sportType) }}
                     style={styles.image}
@@ -206,7 +212,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                         <Text style={styles.organizerTitle}>Organizer</Text>
                         <View style={styles.organizerInfo}>
                             <Image
-                                source={{ uri: eventCreator?.profilePicture || 'https://via.placeholder.com/50' }}
+                                source={{ uri: 'https://via.placeholder.com/50' }}
                                 style={styles.organizerImage}
                             />
                             <View style={styles.organizerDetails}>
@@ -248,7 +254,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     </>
                 )}
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -257,12 +263,21 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
+    backButton: {
+        position: 'absolute',
+        top: 10,    // Adjust based on your screen layout
+        left: 5,   // Adjust based on your screen layout
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
+    },
     scrollView: {
         flex: 1,
     },
     image: {
         width: '100%',
-        height: 200,
+        height: 220,
     },
     detailsContainer: {
         padding: 20,

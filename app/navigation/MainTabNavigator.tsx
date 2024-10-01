@@ -6,8 +6,8 @@ import CreateEvent from '../screen/CreateEvent';
 import ProfileStack from './stack/ProfileStack';
 import { Platform } from "react-native";
 import QuickJoinStack from "./stack/QuickJoinStack";
-import UserLikedEvents from "../screen/UserLikedEvents";
-import MyTabs from "./TopTabNavigation";
+import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
+import JoinedEventsStackScreen from "./stack/JoinedEventsStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -38,9 +38,15 @@ export default function MainTabNavigator() {
             <Tab.Screen
                 name="EventsTab"
                 component={EventsStack}
-                options={{
-                    title: 'Discover',
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="compass" size={24} color={color} />
+                options={({ route }) => {
+                    const routeName = getFocusedRouteNameFromRoute(route) ?? 'Events';
+                    return {
+                        title: 'Discover',
+                        tabBarIcon: ({ color }) => (
+                            <MaterialCommunityIcons name="compass" size={24} color={color} />
+                        ),
+                        headerShown: routeName !== 'EventDetails',  // Show header only if not on EventDetails
+                    };
                 }}
             />
             <Tab.Screen
@@ -52,11 +58,17 @@ export default function MainTabNavigator() {
                 }}
             />
             <Tab.Screen
-                name="MyTabs"
-                component={MyTabs}
-                options={{
-                    title: 'My Events',
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'calendar-heart'} size={24} color={color} />
+                name="JoinedEventsStack"
+                component={JoinedEventsStackScreen}
+                options={({ route }) => {
+                    const routeName = getFocusedRouteNameFromRoute(route) ?? 'MyEvents';
+                    return {
+                        title: 'My Events',
+                        tabBarIcon: ({ color }) => (
+                            <MaterialCommunityIcons name="calendar" size={24} color={color} />
+                        ),
+                        headerShown: routeName !== 'JoinedEventsDetails',  // Show header only if not on EventDetails
+                    };
                 }}
             />
             <Tab.Screen

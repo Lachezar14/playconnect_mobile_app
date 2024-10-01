@@ -16,6 +16,7 @@ export default function JoinedEventsStackScreen({navigation,route}: any) {
         }
     }, [navigation, route]);
 
+
     return (
         <JoinedEventsStack.Navigator>
             <JoinedEventsStack.Screen
@@ -27,10 +28,7 @@ export default function JoinedEventsStackScreen({navigation,route}: any) {
                 name="JoinedEventsDetails"
                 // @ts-ignore
                 component={JoinedEventsDetails}
-                options={{
-                    title: 'Event Details',
-
-                }}
+                options={{ title: 'Event Details', headerShown: false }}
             />
         </JoinedEventsStack.Navigator>
     );
