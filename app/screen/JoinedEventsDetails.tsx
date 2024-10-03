@@ -6,7 +6,6 @@ import {User, Event, Participant, UserStats} from '../utilities/interfaces';
 import {
     checkIfCheckedIn,
     checkIfJoined,
-    eventJoin,
     eventLeave,
     fetchParticipants,
     updateCheckInStatus
@@ -351,7 +350,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 10,
         left: 10,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // White with 50% opacity
         borderRadius: 30,
         padding: 10,
         zIndex: 100,
@@ -361,7 +360,7 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 200,
+        height: 220,
     },
     detailsContainer: {
         padding: 20,

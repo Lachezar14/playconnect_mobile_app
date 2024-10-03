@@ -159,11 +159,28 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView style={styles.scrollView}>
+                {/* Back button */}
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
+
+                {/* Like Button */}
+                <TouchableOpacity
+                    style={styles.likeButton}
+                    onPress={() => navigation.goBack()}>
+                    <Ionicons name="heart" size={24} color="white" />
+                </TouchableOpacity>
+
+                {/* Share Button */}
+                <TouchableOpacity
+                    style={styles.shareButton}
+                    onPress={() => navigation.goBack()}>
+                    <Ionicons name="share-social" size={24} color="white" />
+                </TouchableOpacity>
+
+                {/* Event Image */}
                 <Image
                     source={{ uri: getSportImage(event.sportType) }}
                     style={styles.image}
@@ -267,6 +284,24 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 10,    // Adjust based on your screen layout
         left: 5,   // Adjust based on your screen layout
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
+    },
+    likeButton: {
+        position: 'absolute',
+        top: 10,    // Adjust based on your screen layout
+        right: 55,   // Adjust based on your screen layout
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
+    },
+    shareButton: {
+        position: 'absolute',
+        top: 10,    // Adjust based on your screen layout
+        right: 5,   // Adjust based on your screen layout
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         borderRadius: 30,
         padding: 10,
