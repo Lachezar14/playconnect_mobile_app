@@ -36,8 +36,6 @@ const JoinedEventsDetails: React.FC<Props> = ({ route, navigation }) => {
 
     const [isLeavingEvent, setIsLeavingEvent] = useState(false);
 
-    const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
-
     // Fetch event organizer
     useEffect(() => {
         const fetchEventOrganizer = async () => {
@@ -107,6 +105,7 @@ const JoinedEventsDetails: React.FC<Props> = ({ route, navigation }) => {
             await eventLeave(event.id, user.uid);
             setIsJoined(false);
             setIsLeavingEvent(false);
+            navigation.goBack();
         } catch (error) {
             console.error('Error leaving event: ', error);
             Alert.alert('Error leaving event, please try again');

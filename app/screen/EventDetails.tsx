@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Button} from 'react-native';
+import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Button, RefreshControl} from 'react-native';
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import { useAuth } from '../context/AuthContext';
 import {Event, Participant, User, UserStats} from '../utilities/interfaces';
 import {eventLeave, eventJoin, checkIfJoined, fetchParticipants} from "../services/eventParticipationService";
 import {fetchUserById, fetchUserStats} from "../services/userService";
 import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
-import OpenInMapsButton from "../components/OpenGoogleMapsButton";
 import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {SafeAreaView} from "react-native-safe-area-context";
 
@@ -24,6 +23,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     const [isJoined, setIsJoined] = useState<boolean>(false); // State to track if the user has joined
     const [loading, setLoading] = useState<boolean>(true); // State to track loading
     const [participants, setParticipants] = useState<Participant[]>([]); // For real participant data
+    const [refreshing, setRefreshing] = useState<boolean>(false);
     const [eventCreator, setEventCreator] = useState<User | null>(null);
     console.log('Event organizer:', eventCreator);
     const [creatorStats, setCreatorStats] = useState<UserStats | null>(null);
@@ -109,25 +109,9 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
         }
     };
 
-    // Unregister the user from the event
-    const handleEventLeave = async () => {
-        if (!event.id || !user?.uid) {
-            console.error('Event ID or User ID is undefined');
-            return;
-        }
-
-        try {
-            await eventLeave(event.id, user.uid);
-            setIsJoined(false);
-        } catch (error) {
-            console.error('Error leaving event: ', error);
-            Alert.alert('Error leaving event, please try again');
-        }
-    };
-
     const handleGoToMyEvents = () => {
         // @ts-ignore
-        navigation.navigate('MyTabs', { screen: 'MyEvents' });
+        navigation.navigate('MyEvents');
     };
 
     useEffect(() => {
@@ -156,9 +140,21 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await handleCheckIfJoined();
+        setRefreshing(false);
+    };
+
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.scrollView}>
+            <ScrollView
+                style={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            >
+
                 {/* Back button */}
                 <TouchableOpacity
                     style={styles.backButton}

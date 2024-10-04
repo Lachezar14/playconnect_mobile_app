@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {View, StyleSheet, Dimensions, TouchableOpacity, Text, Alert} from 'react-native';
+import {View, StyleSheet, TouchableOpacity, Text, Alert} from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-import EventCardSwipe from "../components/EventCardSwipe";
+import EventCardSwipe from "../components/event/EventCardSwipe";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FilterModal from '../components/FilterModal';
+import FilterModal from '../components/filters/FilterModal';
 import { Feather } from "@expo/vector-icons";
 import {getUserLocation} from "../services/locationService";
 import {addDistanceToEvents, fetchUpcomingEventsNotJoinedByUser} from "../services/eventService";
@@ -129,6 +129,7 @@ const QuickJoin = ({ navigation, route }) => {
                     onSwipedRight={onSwipedRight}
                     onSwipedLeft={onSwipedLeft}
                     onSwipedTop={onSwipedUp}
+                    disableBottomSwipe={true} // Disable swipe down
                     cardIndex={currentIndex}
                     backgroundColor={'transparent'}
                     stackSize={3}

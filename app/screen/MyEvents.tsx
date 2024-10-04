@@ -1,16 +1,17 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {ScrollView, View, Text, StyleSheet, ActivityIndicator} from 'react-native';
-import EventCardSmall from "../components/EventCardSmall";
+import {ScrollView, View, Text, StyleSheet, ActivityIndicator, RefreshControl} from 'react-native';
+import EventCardSmall from "../components/event/EventCardSmall";
 import {getUserLocation} from "../services/locationService";
 import {addDistanceToEvents, fetchEventsJoinedByUserID, fetchEventsLikedByUser} from "../services/eventService";
 import {useAuth} from "../context/AuthContext";
 import {Event} from "../utilities/interfaces";
-import {useFocusEffect} from "@react-navigation/native";
+
 
 const MyEvents = () => {
     const [joinedEvents, setJoinedEvents] = useState<Event[]>([]);
     const [likedEvents, setLikedEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
     const { user } = useAuth();
 
     const fetchJoinedEvents = useCallback(async () => {
@@ -47,21 +48,33 @@ const MyEvents = () => {
 
             setLikedEvents(fetchedEvents);
         } catch (error) {
-            console.error("Error fetching joined events: ", error);
+            console.error("Error fetching liked events: ", error);
         } finally {
             setLoading(false);
         }
     }, [user]);
 
-    useFocusEffect(
-        useCallback(() => {
-            fetchJoinedEvents();
-            handleLikedEvents();
-        }, [fetchJoinedEvents, handleLikedEvents])
-    );
+    // Fetch data only on initial render
+    useEffect(() => {
+        fetchJoinedEvents();
+        handleLikedEvents();
+    }, [fetchJoinedEvents, handleLikedEvents]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchJoinedEvents();
+        await handleLikedEvents();
+        setRefreshing(false);
+    };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+        >
+
             {/* Joined Events Section */}
             <Text style={styles.sectionTitle}>Joined Events</Text>
             <ScrollView

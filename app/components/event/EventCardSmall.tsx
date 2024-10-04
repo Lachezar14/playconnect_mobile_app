@@ -1,11 +1,11 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Event } from '../utilities/interfaces';
-import {Ionicons} from "@expo/vector-icons";
-import {useAuth} from "../context/AuthContext";
-import {isEventLiked, likeEvent, unlikeEvent} from "../services/userLikedEventsService";
+import { Event } from '../../utilities/interfaces';
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../../context/AuthContext";
+import { isEventLiked, likeEvent, unlikeEvent } from "../../services/userLikedEventsService";
 
 // Define the navigation stack types
 type RootStackParamList = {
@@ -20,10 +20,9 @@ type EventCardNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Ev
 // Card component to display event details
 interface EventCardProps {
     event: Event;
-    targetPage: 'EventDetails' | 'JoinedEventsDetails';
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
+const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
     const navigation = useNavigation<EventCardNavigationProp>();
     const [isLiked, setIsLiked] = useState(false);
     const { user } = useAuth();
@@ -34,22 +33,22 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     const isEventInPast = eventDateTime < currentDate;
 
     // Format the time and date
-    const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'});
-    const formattedDate = eventDateTime.toLocaleDateString([], { month: 'long', day: 'numeric' });
+    const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const formattedDate = eventDateTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
     // Function to map the sport type to an image URL
     const getSportImage = (sport: string) => {
         switch (sport.toLowerCase()) {
             case 'tennis':
-                return 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1976&q=80';
+                return 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?auto=format&fit=crop&w=1976&q=80';
             case 'padel':
-                return 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
+                return 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?auto=format&fit=crop&w=2070&q=80';
             case 'football':
-                return 'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80';
+                return 'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?auto=format&fit=crop&w=2071&q=80';
             case 'basketball':
-                return 'https://images.unsplash.com/photo-1559692048-79a3f837883d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80';
+                return 'https://images.unsplash.com/photo-1559692048-79a3f837883d?auto=format&fit=crop&w=1935&q=80';
             default:
-                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
+                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?auto=format&fit=crop&w=2070&q=80';
         }
     };
 
@@ -72,7 +71,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
             try {
                 if (isLiked) {
                     // Unlike the event
-                    await unlikeEvent(user.uid, event.id); // Pass event id or doc ID
+                    await unlikeEvent(user.uid, event.id);
                     setIsLiked(false);
                 } else {
                     // Like the event
@@ -85,11 +84,14 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
         }
     };
 
+    // Navigate to the EventDetails screen with event data when card is pressed
+    const handleCardPress = () => {
+        console.log('Navigating with event:', event);
+        navigation.navigate('JoinedEventsDetails', { event }); // Navigate to EventDetails page with event
+    };
+
     return (
-        <TouchableOpacity
-            onPress={() => !isEventInPast && navigation.navigate(targetPage, { event })}
-            disabled={isEventInPast}
-        >
+        <TouchableOpacity onPress={handleCardPress}>
             <View style={[styles.card, isEventInPast && styles.disabledCard]}>
                 <Image
                     source={{ uri: getSportImage(event.sportType) }}
@@ -124,7 +126,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     );
 };
 
-export default EventCard;
+export default EventCardSmall;
 
 const styles = StyleSheet.create({
     card: {
@@ -134,17 +136,19 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.3,
         shadowRadius: 10,
-        marginBottom: 16,
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#ccc', // Light gray border
+        width: 220, // Adjusted width to make it less wide
+        marginRight: 15, // Space between cards
     },
     image: {
         width: '100%',
-        height: 150,
+        height: 150, // Adjusted height
     },
     cardContent: {
         padding: 12,
+        marginVertical: 2,
     },
     title: {
         fontSize: 18,

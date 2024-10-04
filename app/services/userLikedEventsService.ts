@@ -1,5 +1,7 @@
 import { FIRESTORE_DB } from '../../firebaseConfig';
 import {collection, query, where, getDocs, addDoc, deleteDoc, doc} from 'firebase/firestore';
+import {dbCounter} from "../utilities/dbCounter";
+
 
 // Check if the event is liked by the user
 export const isEventLiked = async (userId: string, eventId: string) => {
@@ -41,16 +43,15 @@ export const unlikeEvent = async (userId: string, eventId: string) => {
 
 // Get all liked event IDs for a user
 export const getUserLikedEventIds = async (userId: string) => {
+    dbCounter.reset();
     const q = query(
         collection(FIRESTORE_DB, 'userLikedEvents'),
         where('userId', '==', userId)
     );
     const querySnapshot = await getDocs(q);
+    dbCounter.increment();
 
-    const likedEventIds: string[] = [];
-    querySnapshot.forEach((doc) => {
-        likedEventIds.push(doc.data().eventId);
-    });
-
+    const likedEventIds = querySnapshot.docs.map(doc => doc.data().eventId);
+    console.log(`getUserLikedEventIds - Database calls: ${dbCounter.getCount()}, Liked events fetched: ${likedEventIds.length}`);
     return likedEventIds;
 };

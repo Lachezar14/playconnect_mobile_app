@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, FlatList, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import EventCard from '../components/EventCard';  // Assuming you already created this component
+import EventCard from '../components/event/EventCard';  // Assuming you already created this component
 import { useAuth } from '../context/AuthContext';
 import {getUserLocation} from "../services/locationService";
 import { addDistanceToEvents, fetchEventsCreatedByUser } from "../services/eventService";

@@ -4,6 +4,47 @@ import {Event, Suggestion} from '../utilities/interfaces';
 import {checkIfJoined} from "./eventParticipationService";
 import {getUserLikedEventIds} from "./userLikedEventsService";
 import moment from 'moment';
+import {dbCounter} from "../utilities/dbCounter";
+
+// Cache for storing events locally
+const eventCache = new Map<string, Event>();
+
+// Shared function to fetch events by IDs
+const fetchEventsByIds = async (eventIds: string[]): Promise<Event[]> => {
+    const cachedEvents: Event[] = [];
+    const uncachedEventIds: string[] = [];
+
+    // Check cache for each event
+    eventIds.forEach(eventId => {
+        if (eventCache.has(eventId)) {
+            cachedEvents.push(eventCache.get(eventId)!);
+        } else {
+            uncachedEventIds.push(eventId);
+        }
+    });
+
+    // If no uncached events, return from cache
+    if (uncachedEventIds.length === 0) {
+        return cachedEvents;
+    }
+
+    // Query Firestore for uncached events
+    const eventsCollection = collection(FIRESTORE_DB, 'events');
+    const eventQuery = query(eventsCollection, where('__name__', 'in', uncachedEventIds));
+    const eventSnapshot = await getDocs(eventQuery);
+    dbCounter.increment();
+
+    const fetchedEvents = eventSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as Event[];
+
+    // Cache fetched events
+    fetchedEvents.forEach(event => eventCache.set(event.id, event));
+
+    return [...cachedEvents, ...fetchedEvents];
+};
+
 
 // Fetch all events from Firestore
 export const fetchEvents = async (): Promise<Event[]> => {
@@ -20,29 +61,45 @@ export const fetchEvents = async (): Promise<Event[]> => {
     }
 };
 
-// Fetch events joined by the current user
+// Fetch events joined by user
 export const fetchEventsJoinedByUserID = async (userId: string): Promise<Event[]> => {
+    dbCounter.reset();
     try {
         const participantsCollection = collection(FIRESTORE_DB, 'eventParticipants');
         const participantsQuery = query(participantsCollection, where('userId', '==', userId));
         const participantsSnapshot = await getDocs(participantsQuery);
+        dbCounter.increment();
 
         const eventIds = participantsSnapshot.docs.map(doc => doc.data().eventId);
-
         if (eventIds.length === 0) {
+            console.log(`Database calls: ${dbCounter.getCount()}, Events fetched: 0`);
             return [];
         }
 
-        const eventsCollection = collection(FIRESTORE_DB, 'events');
-        const eventSnapshot = await getDocs(eventsCollection);
-        return eventSnapshot.docs
-            .filter(doc => eventIds.includes(doc.id))
-            .map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Event[];
+        const events = await fetchEventsByIds(eventIds);
+        console.log(`fetchEventsJoinedByUserID - Database calls: ${dbCounter.getCount()}, Events fetched: ${events.length}`);
+        return events;
     } catch (error) {
-        console.error("Error fetching events by user ID: ", error);
+        console.error("Error fetching events joined by user:", error);
+        return [];
+    }
+};
+
+// Fetch events liked by user
+export const fetchEventsLikedByUser = async (userId: string): Promise<Event[]> => {
+    dbCounter.reset();
+    try {
+        const likedEventIds = await getUserLikedEventIds(userId);
+        if (likedEventIds.length === 0) {
+            console.log(`Database calls: ${dbCounter.getCount()}, Events fetched: 0`);
+            return [];
+        }
+
+        const events = await fetchEventsByIds(likedEventIds);
+        console.log(`fetchEventsLikedByUser - Database calls: ${dbCounter.getCount()}, Events fetched: ${events.length}`);
+        return events;
+    } catch (error) {
+        console.error("Error fetching liked events:", error);
         return [];
     }
 };
@@ -60,33 +117,6 @@ export const fetchEventsCreatedByUser = async (userId: string): Promise<Event[]>
         })) as Event[];
     } catch (error) {
         console.error("Error fetching events created by user:", error);
-        return [];
-    }
-};
-
-// Fetch liked events by user
-export const fetchEventsLikedByUser = async (userId: string): Promise<Event[]> => {
-    try {
-        // Step 1: Get the event IDs of the liked events
-        const likedEventIds = await getUserLikedEventIds(userId);
-
-        if (likedEventIds.length === 0) {
-            return [];
-        }
-
-        // Step 2: Fetch the liked events by their IDs
-        const eventsCollection = collection(FIRESTORE_DB, 'events');
-        const eventSnapshot = await getDocs(eventsCollection);
-
-        // Step 3: Filter events by liked event IDs
-        return eventSnapshot.docs
-            .filter(doc => likedEventIds.includes(doc.id))
-            .map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Event[];
-    } catch (error) {
-        console.error("Error fetching liked events: ", error);
         return [];
     }
 };
