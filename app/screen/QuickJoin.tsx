@@ -79,7 +79,7 @@ const QuickJoin = ({ navigation, route }) => {
 
         try {
             await eventJoin(event.id, user.uid);
-            //setIsJoined(true);
+            //navigation.navigate('MyEvents');
         } catch (error: Error | any) {
             if (error.message === 'No more places available') {
                 Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');

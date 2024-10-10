@@ -1,5 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Button, RefreshControl} from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    Image,
+    ScrollView,
+    TouchableOpacity,
+    Alert,
+    RefreshControl,
+} from 'react-native';
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import { useAuth } from '../context/AuthContext';
 import {Event, Participant, User, UserStats} from '../utilities/interfaces';
@@ -8,6 +17,7 @@ import {fetchUserById, fetchUserStats} from "../services/userService";
 import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {SafeAreaView} from "react-native-safe-area-context";
+import CustomAlert from "../components/CustomAlert";
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -28,6 +38,9 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     console.log('Event organizer:', eventCreator);
     const [creatorStats, setCreatorStats] = useState<UserStats | null>(null);
     console.log('Event organizer stats:', creatorStats);
+
+    //const [alert, setAlert] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
 
     const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
 
@@ -99,6 +112,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
         try {
             await eventJoin(event.id, user.uid);
             setIsJoined(true);
+            //setAlert({ show: true, message: 'Successfully joined the event!', type: 'success' });
         } catch (error: Error | any) {
             if (error.message === 'No more places available') {
                 Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');
@@ -267,6 +281,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     </>
                 )}
             </View>
+            {/*{alert && alert.show && (*/}
+            {/*    <View style={styles.alertContainer}>*/}
+            {/*        <CustomAlert message={alert.message} type={alert.type} />*/}
+            {/*    </View>*/}
+            {/*)}*/}
         </SafeAreaView>
     );
 };
@@ -275,6 +294,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+    },
+    alertContainer: {
+        position: 'absolute',
+        top: 70,
+        left: 20,
+        right: 20,
+        zIndex: 1000,
     },
     backButton: {
         position: 'absolute',
