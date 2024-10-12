@@ -1,6 +1,7 @@
 import { FIRESTORE_DB } from '../../firebaseConfig';
 import {collection, doc, getDoc, getDocs, query, updateDoc, where} from 'firebase/firestore';
-import {User, UserStats} from '../utilities/interfaces'; // Ensure you have a User interface defined
+import {User, UserStats} from '../utilities/interfaces';
+import {calculateDistance} from "../utilities/calcuteDistance"; // Ensure you have a User interface defined
 
 export const fetchUserById = async (userId: string): Promise<User | null> => {
     try {
@@ -58,5 +59,47 @@ export const updateUserPreferences = async (userId: string, favouriteSport: stri
     }
 };
 
+// Fetch nearby users - 10 km radius by default
+export const fetchNearbyUsers = async ( eventLatitude: any, eventLongitude: any, favouriteSport: string, currentUserId: string, radius = 10): Promise<User[]> => {
+    try {
+        const usersSnapshot = await getDocs(collection(FIRESTORE_DB, 'users'));
+        const nearbyUsers = usersSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() } as User))
+            .filter(user => {
+                // Exclude the current user
+                if (user.id === currentUserId) {
+                    console.log(`Skipping current user: ${currentUserId}`);
+                    return false;
+                }
+
+                if (!user.latitude || !user.longitude) {
+                    console.log(`User ${user.id} missing location data`);
+                    return false;
+                }
+
+                const distance = calculateDistance(
+                    eventLatitude,
+                    eventLongitude,
+                    user.latitude,
+                    user.longitude
+                );
+
+                console.log(`User ${user.id} distance: ${distance.toFixed(2)} meters`);
+
+                const isNearby = distance <= radius * 1000; // Convert radius to meters
+                const hasSameSport = user.favouriteSport === favouriteSport;
+
+                console.log(`User ${user.id} isNearby: ${isNearby}, hasSameSport: ${hasSameSport}`);
+
+                return isNearby && hasSameSport;
+            });
+
+        console.log(`Total nearby users found: ${nearbyUsers.length}`);
+        return nearbyUsers;
+    } catch (error) {
+        console.error('Error fetching nearby users:', error);
+        return [];
+    }
+};
 
 // ... other existing methods in userService.ts

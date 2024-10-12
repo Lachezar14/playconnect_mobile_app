@@ -24,6 +24,8 @@ export interface User {
     userId: string;
     isAvailable: boolean;
     favouriteSport: string;
+    latitude: number;
+    longitude: number;
 }
 
 export interface EventParticipant {
@@ -59,4 +61,13 @@ export interface Suggestion {
     latitude: number;
     longitude: number;
 }
+
+export interface EventInvite {
+    eventCreatorId: string;
+    eventId: string;
+    invitedUserId: string;
+    invitedAt?: any; // You can set this as Date or Firestore Timestamp
+    status: 'pending' | 'accepted' | 'declined'; // Example statuses
+}
+
 // You can add more interfaces or types here as needed
