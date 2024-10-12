@@ -3,7 +3,17 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import {Feather} from "@expo/vector-icons";
 
-const UserInviteCard = ({ profilePicture, firstName, lastName, rating, onInvite, invited }) => {
+// Define the types for the props
+interface UserInviteProps {
+    profilePicture: string;
+    firstName: string;
+    lastName: string;
+    rating: number;
+    onInvite: () => void;
+    invited: boolean;
+}
+
+const UserInviteCard: React.FC<UserInviteProps> = ({ profilePicture, firstName, lastName, rating, onInvite, invited }) => {
     return (
         <View style={styles.card}>
             <Image source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }} style={styles.image} />

@@ -31,11 +31,6 @@ export default function ProfileStack({navigation,route}: any) {
                 options={{ title: 'Profile', headerShown: false }}
             />
             <Stack.Screen
-                name="EventInvitations"
-                component={EventInvitations}
-                options={{ title: 'Invitations' }}
-            />
-            <Stack.Screen
                 name="UserPreferences"
                 // @ts-ignore
                 component={UserPreferences} // Add the new screen

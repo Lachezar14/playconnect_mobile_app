@@ -121,18 +121,15 @@ const Profile = () => {
             {/* Action Items */}
             <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => navigation.navigate('EventInvitations')}  // Navigate to JoinedEvents screen
-            >
-                <Feather name="link" size={24} color="black" />
-                <Text style={styles.menuText}>Event Invites</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={styles.menuItem}
                 onPress={() => navigation.navigate('UserPreferences')}  // Navigate to UserPreferences screen
             >
-                <Feather name="edit" size={24} color="black" />
+                <MaterialCommunityIcons name="account-wrench-outline" size={26} color="black" />
                 <Text style={styles.menuText}>My Preferences</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem}>
+                <Feather name="edit" size={24} color="black" />
+                <Text style={styles.menuText}>Edit Profile</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem}>

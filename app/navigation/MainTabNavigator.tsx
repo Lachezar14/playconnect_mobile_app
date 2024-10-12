@@ -7,7 +7,8 @@ import ProfileStack from './stack/ProfileStack';
 import { Platform } from "react-native";
 import QuickJoinStack from "./stack/QuickJoinStack";
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
-import JoinedEventsStackScreen from "./stack/JoinedEventsStack";
+import MyEventsStackScreen from "./stack/MyEventsStack";
+import EventInvitations from "../screen/EventInvitations";
 
 const Tab = createBottomTabNavigator();
 
@@ -49,17 +50,17 @@ export default function MainTabNavigator() {
                     };
                 }}
             />
+            {/*<Tab.Screen*/}
+            {/*    name="CreateEventTab"*/}
+            {/*    component={CreateEvent}*/}
+            {/*    options={{*/}
+            {/*        title: 'Create',*/}
+            {/*        tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'plus-circle'} size={24} color={color} />*/}
+            {/*    }}*/}
+            {/*/>*/}
             <Tab.Screen
-                name="CreateEventTab"
-                component={CreateEvent}
-                options={{
-                    title: 'Create',
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'plus-circle'} size={24} color={color} />
-                }}
-            />
-            <Tab.Screen
-                name="JoinedEventsStack"
-                component={JoinedEventsStackScreen}
+                name="MyEventsStack"
+                component={MyEventsStackScreen}
                 options={({ route }) => {
                     const routeName = getFocusedRouteNameFromRoute(route) ?? 'MyEvents';
                     return {
@@ -69,6 +70,14 @@ export default function MainTabNavigator() {
                         ),
                         headerShown: routeName !== 'JoinedEventsDetails',  // Show header only if not on EventDetails
                     };
+                }}
+            />
+            <Tab.Screen
+                name="EventInvitationsTab"
+                component={EventInvitations}
+                options={{
+                    title: 'Invitations',
+                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name='inbox-full' size={24} color={color} />
                 }}
             />
             <Tab.Screen
