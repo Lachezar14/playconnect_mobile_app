@@ -1,5 +1,5 @@
 import { FIRESTORE_DB } from '../../firebaseConfig';
-import {collection, doc, getDoc, getDocs, query, where} from 'firebase/firestore';
+import {collection, doc, getDoc, getDocs, query, updateDoc, where} from 'firebase/firestore';
 import {User, UserStats} from '../utilities/interfaces'; // Ensure you have a User interface defined
 
 export const fetchUserById = async (userId: string): Promise<User | null> => {
@@ -41,6 +41,20 @@ export const fetchUserStats = async (userId: string): Promise<UserStats | null> 
     } catch (error) {
         console.error('Error fetching user stats:', error);
         return null;
+    }
+};
+
+// New function to update user preferences (favourite sport and availability)
+export const updateUserPreferences = async (userId: string, favouriteSport: string, isAvailable: boolean): Promise<void> => {
+    try {
+        const userDocRef = doc(FIRESTORE_DB, 'users', userId);
+        await updateDoc(userDocRef, {
+            favouriteSport,   // Save the favourite sport
+            isAvailable       // Save availability status
+        });
+        console.log('User preferences updated successfully');
+    } catch (error) {
+        console.error('Error updating user preferences:', error);
     }
 };
 

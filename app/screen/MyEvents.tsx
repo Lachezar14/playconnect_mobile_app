@@ -5,6 +5,7 @@ import {getUserLocation} from "../services/locationService";
 import {addDistanceToEvents, fetchEventsJoinedByUserID, fetchEventsLikedByUser} from "../services/eventService";
 import {useAuth} from "../context/AuthContext";
 import {Event} from "../utilities/interfaces";
+import {useFocusEffect} from "@react-navigation/native";
 
 
 const MyEvents = () => {
@@ -54,11 +55,12 @@ const MyEvents = () => {
         }
     }, [user]);
 
-    // Fetch data only on initial render
-    useEffect(() => {
-        fetchJoinedEvents();
-        handleLikedEvents();
-    }, [fetchJoinedEvents, handleLikedEvents]);
+    useFocusEffect(
+        useCallback(() => {
+            fetchJoinedEvents();
+            handleLikedEvents();
+        }, [fetchJoinedEvents, handleLikedEvents])
+    );
 
     const onRefresh = async () => {
         setRefreshing(true);

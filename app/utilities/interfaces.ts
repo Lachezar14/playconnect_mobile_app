@@ -22,6 +22,8 @@ export interface User {
     firstName: string;
     lastName: string;
     userId: string;
+    isAvailable: boolean;
+    favouriteSport: string;
 }
 
 export interface EventParticipant {
