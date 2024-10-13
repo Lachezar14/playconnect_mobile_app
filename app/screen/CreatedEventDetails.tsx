@@ -6,7 +6,6 @@ import {User, Event, Participant, UserStats} from '../utilities/interfaces';
 import {
     checkIfCheckedIn,
     checkIfJoined,
-    eventLeave,
     fetchParticipants,
     updateCheckInStatus
 } from "../services/eventParticipationService";
@@ -106,7 +105,7 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
     };
 
     // Unregister the user from the event
-    const handleEventLeave = async () => {
+    const handleEventDelete = async () => {
         if (!event.id || !user?.uid) {
             console.error('Event ID or User ID is undefined');
             return;
@@ -337,7 +336,7 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                                             },
                                             {
                                                 text: "Yes, Delete",
-                                                onPress: handleEventLeave
+                                                onPress: handleEventDelete
                                             }
                                         ]
                                     );

@@ -4,6 +4,7 @@ import {useAuth} from "../context/AuthContext";
 import {fetchEventInvitesByUserId} from "../services/eventInviteService";
 import {EventInvite} from "../utilities/interfaces";
 import EventInvitationCard from "../components/event/EventInvitationCard";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const EventInvitations = () => {
     const { user } = useAuth();
@@ -26,7 +27,7 @@ const EventInvitations = () => {
     }, []);
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <ScrollView>
             {/* Render the list of event invitations here */}
             {invitations.length === 0 ? (
@@ -35,13 +36,14 @@ const EventInvitations = () => {
                 invitations.map(item => (
                     <EventInvitationCard
                         key={item.id}
+                        eventInviteId={item.id}
                         eventId={item.eventId}
                         creatorId={item.eventCreatorId}
                     />
                 ))
             )}
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 };
 

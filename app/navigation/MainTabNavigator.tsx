@@ -1,77 +1,87 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Platform } from "react-native";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import EventsStack from './stack/EventsStack';
 import ProfileStack from './stack/ProfileStack';
-import { Platform } from "react-native";
 import QuickJoinStack from "./stack/QuickJoinStack";
-import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
 import MyEventsStackScreen from "./stack/MyEventsStack";
-import EventInvitations from "../screen/EventInvitations";
+import InvitationsStack from "./stack/InvitationsStack";
+import CustomTabBar from './CustomTabBar';
 
 const Tab = createBottomTabNavigator();
 
-const tabBarHeight = Platform.select({ ios: 80, android: 60 });
+const tabBarHeight = Platform.select({ ios: 90, android: 70 });
+const iconSize = 24;
+const activeColor = '#38A169';  // A shade of green
+const inactiveColor = '#757575';  // A medium gray
+const topSpacing = 2;
+const bottomSpacing = Platform.OS === 'ios' ? 28 : 12;  // Extra padding for iOS to account for home indicator
+const backgroundColor = 'white';  // Light gray background
+
+const getTabBarVisibility = (route) => {
+    const routeName = getFocusedRouteNameFromRoute(route) ?? 'INITIAL';
+    const hideOnScreens = ['EventDetails', 'CreateEvent'];
+    return hideOnScreens.includes(routeName) ? 'none' : 'flex';
+};
 
 export default function MainTabNavigator() {
     return (
         <Tab.Navigator
             initialRouteName="Events"
+            tabBar={(props) => (
+                <CustomTabBar
+                    {...props}
+                    tabBarHeight={tabBarHeight}
+                    iconSize={iconSize}
+                    activeColor={activeColor}
+                    inactiveColor={inactiveColor}
+                    topSpacing={topSpacing}
+                    bottomSpacing={bottomSpacing}
+                    backgroundColor={backgroundColor}
+                />
+            )}
             screenOptions={{
-                tabBarStyle: {
-                    height: tabBarHeight,
-                    paddingBottom: Platform.OS === 'ios' ? 30 : 10, // Add padding for iOS
-                    elevation: 0, // Remove shadow for Android
-                },
-                tabBarActiveTintColor: 'green',
-                tabBarInactiveTintColor: 'gray',
+                tabBarActiveTintColor: activeColor,
+                tabBarInactiveTintColor: inactiveColor,
             }}>
             <Tab.Screen
                 name="QuickJoinTab"
                 component={QuickJoinStack}
                 options={{
                     title: 'Quick Join',
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="handshake" size={24} color={color} />,
+                    tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="handshake" size={size} color={color} />,
                     headerShown: false,
                 }}
             />
             <Tab.Screen
                 name="EventsTab"
                 component={EventsStack}
-                options={({ route }) => {
-                    const routeName = getFocusedRouteNameFromRoute(route) ?? 'Events';
-                    return {
-                        title: 'Discover',
-                        tabBarIcon: ({ color }) => (
-                            <MaterialCommunityIcons name="compass" size={24} color={color} />
-                        ),
-                        headerShown: routeName !== 'EventDetails',  // Show header only if not on EventDetails
-                    };
-                }}
+                options={({ route }) => ({
+                    title: 'Discover',
+                    tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="compass" size={size} color={color} />,
+                    headerShown: getFocusedRouteNameFromRoute(route) !== 'EventDetails',
+                    tabBarStyle: { display: getTabBarVisibility(route) }
+                })}
             />
             <Tab.Screen
                 name="MyEventsStack"
                 component={MyEventsStackScreen}
-                options={({ route }) => {
-                    const routeName = getFocusedRouteNameFromRoute(route) ?? 'MyEvents';
-                    return {
-                        title: 'My Events',
-                        tabBarIcon: ({ color }) => (
-                            <MaterialCommunityIcons name="calendar" size={24} color={color} />
-                        ),
-                        headerShown: routeName === 'MyEvents',  // Show header only if on MyEvents
-                        tabBarStyle: routeName === 'CreateEvent' || routeName.includes('Details')
-                            ? { display: 'none' }
-                            : {}, // Hide tab bar on details and create event screens
-                    };
-                }}
+                options={({ route }) => ({
+                    title: 'My Events',
+                    tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="calendar" size={size} color={color} />,
+                    headerShown: getFocusedRouteNameFromRoute(route) === 'MyEvents',
+                    tabBarStyle: { display: getTabBarVisibility(route) }
+                })}
             />
             <Tab.Screen
                 name="EventInvitationsTab"
-                component={EventInvitations}
+                component={InvitationsStack}
                 options={{
                     title: 'Invitations',
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name='inbox-full' size={24} color={color} />
+                    headerShown: false,
+                    tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name='inbox-full' size={size} color={color} />
                 }}
             />
             <Tab.Screen
@@ -80,7 +90,7 @@ export default function MainTabNavigator() {
                 options={{
                     title: 'Profile',
                     headerShown: false,
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={24} color={color} />
+                    tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="account" size={size} color={color} />
                 }}
             />
         </Tab.Navigator>

@@ -1,29 +1,42 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
 import {Feather} from "@expo/vector-icons";
-import {User, Event} from "../../utilities/interfaces";
+import {User, Event, EventInvite} from "../../utilities/interfaces";
 import {fetchUserById} from "../../services/userService";
 import {fetchEventById} from "../../services/eventService";
 import {useNavigation} from "@react-navigation/native";
+import {acceptEventInvite, declineEventInvite, fetchEventInviteById} from "../../services/eventInviteService";
+import {useAuth} from "../../context/AuthContext";
 
 // Define the types for the props
 interface EventInvitationCardProps {
+    eventInviteId: string;
     eventId: string;
     creatorId: string;
 }
 
-const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, creatorId }) => {
+const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId ,eventId, creatorId }) => {
+    const { user } = useAuth();
+    const [eventInvite, setEventInvite] = useState<EventInvite | null>(null);
     const [event, setEvent] = useState<Event | null>(null);
-    console.log(event);
     const [creator, setCreator] = useState<User | null>(null);
-
     const navigation = useNavigation();
+
+    const fetchEventInvite = async () => {
+        if (!eventInviteId) return;
+
+        try {
+            const eventInviteData = await fetchEventInviteById(eventInviteId);
+            setEventInvite(eventInviteData);
+        } catch (error) {
+            console.error("Error fetching event invite details: ", error);
+        }
+    }
 
     const fetchEvent = async () => {
         if (!eventId) return;
 
         try {
-            // Fetch event details
             const eventData = await fetchEventById(eventId);
             setEvent(eventData);
         } catch (error) {
@@ -35,7 +48,6 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, crea
         if (!creatorId) return;
 
         try {
-            // Fetch creator details
             const creatorData = await fetchUserById(creatorId);
             setCreator(creatorData);
         } catch (error) {
@@ -43,16 +55,37 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, crea
         }
     };
 
-    const handleNavigate = () => {
+    const handleNavigateToEvent = () => {
         navigation.navigate('EventDetails', { event });
     };
 
+    const handleNavigateToJoinedEvent = () => {
+        navigation.navigate('MyEventsStack', { screen: 'JoinedEventDetails', params: { event } });
+    }
+
+    const handleDecline = async () => {
+        try {
+            await declineEventInvite(eventInviteId);
+            setEventInvite({ ...eventInvite, status: 'declined' });
+        } catch (error) {
+            console.error("Error declining event invite: ", error);
+        }
+    };
+
+    const handleAccept = async () => {
+        try {
+            await acceptEventInvite(eventInviteId, eventId, user?.uid || '');
+            setEventInvite({ ...eventInvite, status: 'accepted' });
+        } catch (error) {
+            console.error("Error accepting event invite: ", error);
+        }
+    }
+
     useEffect(() => {
-        console.log("Event ID:", eventId);
-        console.log("Creator ID:", creatorId);
+        fetchEventInvite();
         fetchEvent();
         fetchCreator();
-    }, [eventId, creatorId]);
+    }, [eventInviteId ,eventId, creatorId]);
 
     const formatDate = (date: string) => {
         if (!date) return '';
@@ -61,11 +94,34 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, crea
         const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         return `${formattedTime} / ${formattedDate}`;
-    }
+    };
+
+    // Utility function to capitalize the first letter of a string
+    const capitalizeFirstLetter = (string: string) => {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    };
+
+    // Function to get badge color based on invite status
+    const getBadgeStyle = (status: string) => {
+        switch (status) {
+            case 'accepted':
+                return { backgroundColor: '#38A169' }; // Green for accepted
+            case 'declined':
+                return { backgroundColor: '#E53E3E' }; // Red for declined
+            default:
+                return { backgroundColor: '#CBD5E0' }; // Grey for pending or others
+        }
+    };
 
     return (
         <View style={styles.cardContainer}>
-            <TouchableOpacity onPress={handleNavigate}>
+            <TouchableOpacity onPress={eventInvite?.status === 'accepted' ? handleNavigateToJoinedEvent : handleNavigateToEvent}>
+             {/*Badge for event invite status */}
+            <View style={[styles.badge, getBadgeStyle(eventInvite?.status || 'pending')]}>
+                <Text style={styles.badgeText}>{capitalizeFirstLetter(eventInvite?.status || 'Pending')}</Text>
+            </View>
+
             {/* Header: Inviter's avatar and name */}
             <View style={styles.inviterContainer}>
                 <Image
@@ -73,18 +129,15 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, crea
                     source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
                 />
                 <Text style={styles.inviterName}>{creator?.firstName} {creator?.lastName}</Text>
-                <Text style={styles.inviteText}>invited you to:</Text>
             </View>
 
             {/* Main Content: Event image and details */}
             <View style={styles.mainContent}>
-                {/* Event Image */}
                 <Image
                     source={{ uri: 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1976&q=80' }}
                     style={styles.eventImage}
                 />
 
-                {/* Event Details */}
                 <View style={styles.infoContainer}>
                     <Text style={styles.eventTitle}>{event?.title}</Text>
 
@@ -99,6 +152,18 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, crea
                     </View>
                 </View>
             </View>
+
+            {/* Conditional Rendering for Buttons based on EventInvite Status */}
+            {eventInvite?.status === 'pending' ? (
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.viewButton} onPress={handleAccept}>
+                        <Text style={styles.buttonText}>Accept</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.declineButton} onPress={handleDecline}>
+                        <Text style={styles.buttonTextDecline}>Decline</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : null }
             </TouchableOpacity>
         </View>
     );
@@ -107,7 +172,7 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, crea
 const styles = StyleSheet.create({
     cardContainer: {
         backgroundColor: '#fff',
-        borderRadius: 10,
+        borderRadius: 12,
         padding: 10,
         shadowColor: '#000',
         shadowOpacity: 0.1,
@@ -126,11 +191,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#38A169',
-    },
-    inviteText: {
-        marginLeft: 4,
-        fontSize: 16,
-        color: '#8a8a8a',
     },
     mainContent: {
         flexDirection: 'row',
@@ -166,6 +226,68 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         borderWidth: 2,
         borderColor: '#6C63FF',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 12,
+    },
+    viewButton: {
+        backgroundColor: '#38A169',
+        padding: 10,
+        borderRadius: 25,
+        flex: 1,
+        marginRight: 8,
+    },
+    declineButton: {
+        backgroundColor: '#F1F4F8',
+        padding: 10,
+        borderRadius: 25,
+        flex: 1,
+    },
+    myEventsButton: {
+        backgroundColor: '#38A169',
+        padding: 10,
+        borderRadius: 25,
+        width: '100%',
+        textAlign: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    buttonTextDecline: {
+        color: '#605f5f',
+        fontSize: 16,
+        textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    declinedText: {
+        color: '#605f5f',
+        fontSize: 16,
+        textAlign: 'center',
+        fontWeight: 'bold',
+        marginTop: 12,
+    },
+    badge: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 25,
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    centerButtonContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 12,
     },
 });
 
