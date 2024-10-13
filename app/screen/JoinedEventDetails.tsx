@@ -23,7 +23,7 @@ type RootStackParamList = {
 // Define props using NativeStackScreenProps
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinedEventsDetails'>;
 
-const JoinedEventsDetails: React.FC<Props> = ({ route, navigation }) => {
+const JoinedEventDetails: React.FC<Props> = ({ route, navigation }) => {
     const { user } = useAuth();
     const { event } = route.params;
     const [isJoined, setIsJoined] = useState<boolean>(false);
@@ -113,6 +113,11 @@ const JoinedEventsDetails: React.FC<Props> = ({ route, navigation }) => {
     };
 
     const handleCheckIn = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return
+        }
+
         if (checkedIn) {
             Alert.alert('Already Checked In', 'You have already checked in for this event.');
             return;
@@ -150,6 +155,11 @@ const JoinedEventsDetails: React.FC<Props> = ({ route, navigation }) => {
     };
 
     const handleCheckIfCheckedIn = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return;
+        }
+
         try {
             const isCheckedIn = await checkIfCheckedIn(event.id, user?.uid);
             setCheckedIn(isCheckedIn); // Set local state based on service result
@@ -570,6 +580,24 @@ const styles = StyleSheet.create({
         backgroundColor: '#E0E0E0',
         marginBottom: 20,
     },
+    likeButton: {
+        position: 'absolute',
+        top: 10,    // Adjust based on your screen layout
+        right: 55,   // Adjust based on your screen layout
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
+    },
+    shareButton: {
+        position: 'absolute',
+        top: 10,    // Adjust based on your screen layout
+        right: 5,   // Adjust based on your screen layout
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
+    },
 });
 
-export default JoinedEventsDetails;
+export default JoinedEventDetails;

@@ -1,5 +1,5 @@
 import {FIRESTORE_DB} from '../../firebaseConfig';
-import {addDoc, collection, getDocs, query, where} from 'firebase/firestore';
+import {addDoc, collection, doc, getDoc, getDocs, query, where} from 'firebase/firestore';
 import {Event, Suggestion} from '../utilities/interfaces';
 import {checkIfJoined} from "./eventParticipationService";
 import {getUserLikedEventIds} from "./userLikedEventsService";
@@ -8,6 +8,37 @@ import {dbCounter} from "../utilities/dbCounter";
 
 // Cache for storing events locally
 const eventCache = new Map<string, Event>();
+
+// Fetch event by ID
+export const fetchEventById = async (eventId: string): Promise<Event | null> => {
+    try {
+        // Check cache first
+        if (eventCache.has(eventId)) {
+            return eventCache.get(eventId)!; // Use non-null assertion since we check if it exists
+        }
+
+        // Fetch the document using doc() and getDoc()
+        const eventDocRef = doc(FIRESTORE_DB, 'events', eventId);
+        const eventDoc = await getDoc(eventDocRef);
+        dbCounter.increment();
+
+        // Check if the document exists
+        if (!eventDoc.exists()) {
+            return null;
+        }
+
+        const event = {
+            id: eventDoc.id,
+            ...eventDoc.data(), // No need for an array here since we get a single document
+        } as Event;
+
+        eventCache.set(eventId, event); // Cache the event
+        return event;
+    } catch (error) {
+        console.error("Error fetching event by ID: ", error);
+        return null;
+    }
+};
 
 // Shared function to fetch events by IDs
 const fetchEventsByIds = async (eventIds: string[]): Promise<Event[]> => {

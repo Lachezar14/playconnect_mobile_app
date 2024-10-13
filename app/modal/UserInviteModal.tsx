@@ -17,11 +17,10 @@ interface UserInviteModalProps {
     isVisible: boolean;
     onClose: () => void;
     event: Event // Assuming it's a string, adjust if necessary
-    eventSport: string;     // Assuming it's a string, adjust if necessary
     currentUserId: string;  // Assuming it's a string, adjust if necessary
 }
 
-const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, event, eventSport, currentUserId }) => {
+const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, event, currentUserId }) => {
     const [nearbyUsers, setNearbyUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -37,7 +36,7 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
         setError(null);
         try {
             // Fetch nearby users
-            const users = await fetchNearbyUsers(event.latitude, event.longitude, eventSport, currentUserId);
+            const users = await fetchNearbyUsers(event.latitude, event.longitude, event.sportType, currentUserId);
             setNearbyUsers(users);
             console.log('Nearby users loaded:', users);
 

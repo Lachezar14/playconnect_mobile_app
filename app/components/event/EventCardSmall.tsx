@@ -11,7 +11,8 @@ import { isEventLiked, likeEvent, unlikeEvent } from "../../services/userLikedEv
 type RootStackParamList = {
     Events: undefined;
     EventDetails: { event: Event };
-    JoinedEventsDetails: { event: Event };
+    JoinedEventDetails: { event: Event };
+    CreatedEventDetails: { event: Event };
 };
 
 // Define the type for navigation prop
@@ -86,8 +87,13 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
 
     // Navigate to the EventDetails screen with event data when card is pressed
     const handleCardPress = () => {
-        console.log('Navigating with event:', event);
-        navigation.navigate('JoinedEventsDetails', { event }); // Navigate to EventDetails page with event
+        if (event.userId === user?.uid) {
+            navigation.navigate('CreatedEventDetails', { event });
+        } else if (isLiked) {
+            navigation.navigate('EventDetails', { event });
+        } else {
+            navigation.navigate('JoinedEventDetails', { event });
+        }
     };
 
     return (

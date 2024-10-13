@@ -1,17 +1,78 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
-import {Feather, MaterialCommunityIcons} from "@expo/vector-icons";
+import React, {useEffect, useState} from 'react';
+import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
+import {Feather} from "@expo/vector-icons";
+import {User, Event} from "../../utilities/interfaces";
+import {fetchUserById} from "../../services/userService";
+import {fetchEventById} from "../../services/eventService";
+import {useNavigation} from "@react-navigation/native";
 
-const EventInvitationCard = () => {
+// Define the types for the props
+interface EventInvitationCardProps {
+    eventId: string;
+    creatorId: string;
+}
+
+const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventId, creatorId }) => {
+    const [event, setEvent] = useState<Event | null>(null);
+    console.log(event);
+    const [creator, setCreator] = useState<User | null>(null);
+
+    const navigation = useNavigation();
+
+    const fetchEvent = async () => {
+        if (!eventId) return;
+
+        try {
+            // Fetch event details
+            const eventData = await fetchEventById(eventId);
+            setEvent(eventData);
+        } catch (error) {
+            console.error("Error fetching event details: ", error);
+        }
+    };
+
+    const fetchCreator = async () => {
+        if (!creatorId) return;
+
+        try {
+            // Fetch creator details
+            const creatorData = await fetchUserById(creatorId);
+            setCreator(creatorData);
+        } catch (error) {
+            console.error("Error fetching creator details: ", error);
+        }
+    };
+
+    const handleNavigate = () => {
+        navigation.navigate('EventDetails', { event });
+    };
+
+    useEffect(() => {
+        console.log("Event ID:", eventId);
+        console.log("Creator ID:", creatorId);
+        fetchEvent();
+        fetchCreator();
+    }, [eventId, creatorId]);
+
+    const formatDate = (date: string) => {
+        if (!date) return '';
+
+        const eventDateTime = new Date(date);
+        const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        return `${formattedTime} / ${formattedDate}`;
+    }
+
     return (
         <View style={styles.cardContainer}>
+            <TouchableOpacity onPress={handleNavigate}>
             {/* Header: Inviter's avatar and name */}
             <View style={styles.inviterContainer}>
                 <Image
                     style={styles.profileImage}
                     source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
                 />
-                <Text style={styles.inviterName}>Alex Johnson</Text>
+                <Text style={styles.inviterName}>{creator?.firstName} {creator?.lastName}</Text>
                 <Text style={styles.inviteText}>invited you to:</Text>
             </View>
 
@@ -25,19 +86,20 @@ const EventInvitationCard = () => {
 
                 {/* Event Details */}
                 <View style={styles.infoContainer}>
-                    <Text style={styles.eventTitle}>Summer Soccer Tournament</Text>
+                    <Text style={styles.eventTitle}>{event?.title}</Text>
 
                     <View style={styles.row}>
-                        <Feather size={20} name="activity" type="font-awesome" color="#38A169" />
-                        <Text style={styles.iconText}>Soccer</Text>
+                        <Feather size={20} name="activity" color="#38A169" />
+                        <Text style={styles.iconText}>{event?.sportType}</Text>
                     </View>
 
                     <View style={styles.row}>
-                        <Feather size={20} name="calendar" type="font-awesome" color="#38A169" />
-                        <Text style={styles.iconText}>July 15, 2023</Text>
+                        <Feather size={20} name="calendar" color="#38A169" />
+                        <Text style={styles.iconText}>{formatDate(event?.date)}</Text>
                     </View>
                 </View>
             </View>
+            </TouchableOpacity>
         </View>
     );
 };

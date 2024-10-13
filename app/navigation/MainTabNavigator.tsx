@@ -2,7 +2,6 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import EventsStack from './stack/EventsStack';
-import CreateEvent from '../screen/CreateEvent';
 import ProfileStack from './stack/ProfileStack';
 import { Platform } from "react-native";
 import QuickJoinStack from "./stack/QuickJoinStack";
@@ -50,14 +49,6 @@ export default function MainTabNavigator() {
                     };
                 }}
             />
-            {/*<Tab.Screen*/}
-            {/*    name="CreateEventTab"*/}
-            {/*    component={CreateEvent}*/}
-            {/*    options={{*/}
-            {/*        title: 'Create',*/}
-            {/*        tabBarIcon: ({ color }) => <MaterialCommunityIcons name={'plus-circle'} size={24} color={color} />*/}
-            {/*    }}*/}
-            {/*/>*/}
             <Tab.Screen
                 name="MyEventsStack"
                 component={MyEventsStackScreen}
@@ -68,7 +59,10 @@ export default function MainTabNavigator() {
                         tabBarIcon: ({ color }) => (
                             <MaterialCommunityIcons name="calendar" size={24} color={color} />
                         ),
-                        headerShown: routeName !== 'JoinedEventsDetails',  // Show header only if not on EventDetails
+                        headerShown: routeName === 'MyEvents',  // Show header only if on MyEvents
+                        tabBarStyle: routeName === 'CreateEvent' || routeName.includes('Details')
+                            ? { display: 'none' }
+                            : {}, // Hide tab bar on details and create event screens
                     };
                 }}
             />

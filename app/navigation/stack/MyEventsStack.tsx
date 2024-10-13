@@ -1,16 +1,18 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MyEvents from '../../screen/MyEvents';
-import JoinedEventsDetails from '../../screen/JoinedEventsDetails';
+import JoinedEventDetails from '../../screen/JoinedEventDetails';
 import React from 'react';
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
 import CreateEvent from "../../screen/CreateEvent";
+import CreatedEventDetails from "../../screen/CreatedEventDetails";
+import EventDetails from "../../screen/EventDetails";
 
 const MyEventsStack = createNativeStackNavigator();
 
 export default function JoinedEventsStackScreen({navigation,route}: any) {
     React.useLayoutEffect(() => {
         const routeName = getFocusedRouteNameFromRoute(route);
-        if (routeName === "JoinedEventsDetails" || routeName === "CreateEvent") {
+        if (routeName === 'JoinedEventDetails' || routeName === 'CreatedEventDetails' || routeName === 'CreateEvent') {
             navigation.setOptions({tabBarStyle: {display: 'none'}});
         }else {
             navigation.setOptions({tabBarStyle: {display: 'flex'}});
@@ -26,9 +28,21 @@ export default function JoinedEventsStackScreen({navigation,route}: any) {
                 options={{ title: 'My Events', headerShown: false }}
             />
             <MyEventsStack.Screen
-                name="JoinedEventsDetails"
+                name="EventDetails"
                 // @ts-ignore
-                component={JoinedEventsDetails}
+                component={EventDetails}
+                options={{ title: 'Event Details', headerShown: false }}
+            />
+            <MyEventsStack.Screen
+                name="JoinedEventDetails"
+                // @ts-ignore
+                component={JoinedEventDetails}
+                options={{ title: 'Event Details', headerShown: false }}
+            />
+            <MyEventsStack.Screen
+                name="CreatedEventDetails"
+                // @ts-ignore
+                component={CreatedEventDetails}
                 options={{ title: 'Event Details', headerShown: false }}
             />
             <MyEventsStack.Screen

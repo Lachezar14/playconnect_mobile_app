@@ -1,41 +1,46 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import UserInviteModal from "../modal/UserInviteModal";
+import React, {useEffect, useState} from 'react';
+import {View, StyleSheet, Text, ScrollView} from 'react-native';
 import {useAuth} from "../context/AuthContext";
+import {fetchEventInvitesByUserId} from "../services/eventInviteService";
+import {EventInvite} from "../utilities/interfaces";
+import EventInvitationCard from "../components/event/EventInvitationCard";
 
 const EventInvitations = () => {
-    const [isModalVisible, setIsModalVisible] = useState(false);
     const { user } = useAuth();
+    const [invitations, setInvitations] = useState<EventInvite[]>([]);
 
-    const handleInvite = () => {
-        // Handle the invite action here (e.g., send an invite to the user)
-        console.log(`Inviting user...`);
-    };
+    const fetchInvitations = async () => {
+        if (!user) return;
 
-    const openModal = () => {
-        setIsModalVisible(true);
-    };
+        try {
+            const invitations = await fetchEventInvitesByUserId(user.uid);
+            setInvitations(invitations);
+        }
+        catch (error) {
+            console.error("Error fetching event invitations: ", error);
+        }
+    }
 
-    const closeModal = () => {
-        setIsModalVisible(false);
-    };
-
-    // Example event location and sport (you should replace these with actual event data)
-    const event = { id: "ewweewfewffwefw", latitude: 51.450606, longitude: 5.4635542 };
-    const eventSport = 'Football';
+    useEffect(() => {
+        fetchInvitations();
+    }, []);
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.button} onPress={openModal}>
-                <Text style={styles.buttonText}>Invite Nearby Users</Text>
-            </TouchableOpacity>
-            <UserInviteModal
-                isVisible={isModalVisible}
-                onClose={closeModal}
-                event={event}
-                eventSport={eventSport}
-                currentUserId={user?.uid || ''}
-            />
+            <ScrollView>
+            {/* Render the list of event invitations here */}
+            {invitations.length === 0 ? (
+                <Text style={styles.emptyText}>No invitations received yet</Text>
+            ) : (
+                invitations.map(item => (
+                    <EventInvitationCard
+                        key={item.id}
+                        eventId={item.eventId}
+                        creatorId={item.eventCreatorId}
+                    />
+                ))
+            )}
+            </ScrollView>
         </View>
     );
 };
@@ -43,19 +48,10 @@ const EventInvitations = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
     },
-    button: {
-        backgroundColor: '#38A169',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    buttonText: {
-        color: 'white',
-        fontWeight: 'bold',
+    emptyText: {
         fontSize: 16,
+        color: 'gray',
     },
 });
 
