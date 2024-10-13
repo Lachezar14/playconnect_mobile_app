@@ -1,5 +1,5 @@
 import { FIRESTORE_DB } from '../../firebaseConfig';
-import {doc, runTransaction, addDoc, collection, query, where, getDocs, updateDoc} from 'firebase/firestore';
+import {doc, runTransaction, addDoc, collection, query, where, getDocs, updateDoc, deleteDoc} from 'firebase/firestore';
 import {Participant} from "../utilities/interfaces";
 
 // Fetch all participants that have joined an event, their names and IDs
@@ -178,5 +178,26 @@ export const updateCheckInStatus = async (eventId: string, userId: string): Prom
     } catch (error) {
         console.error('Error updating check-in status:', error);
         throw error;
+    }
+};
+
+// Delete all participants by event ID
+export const deleteParticipantsByEventId = async (eventId: string): Promise<void> => {
+    try {
+        const eventParticipantsQuery = query(
+            collection(FIRESTORE_DB, 'eventParticipants'),
+            where('eventId', '==', eventId)
+        );
+        const querySnapshot = await getDocs(eventParticipantsQuery);
+
+        const deletePromises = querySnapshot.docs.map((docSnapshot) =>
+            deleteDoc(docSnapshot.ref) // Use deleteDoc here
+        );
+
+        await Promise.all(deletePromises);
+        console.log(`Deleted all participants for event: ${eventId}`);
+    } catch (error) {
+        console.error('Error deleting participants:', error);
+        throw new Error('Failed to delete participants for the event');
     }
 };

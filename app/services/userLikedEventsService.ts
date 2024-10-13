@@ -55,3 +55,35 @@ export const getUserLikedEventIds = async (userId: string) => {
     console.log(`getUserLikedEventIds - Database calls: ${dbCounter.getCount()}, Liked events fetched: ${likedEventIds.length}`);
     return likedEventIds;
 };
+
+// Remove all liked events by eventId
+export const removeAllLikesForEvent = async (eventId: string): Promise<void> => {
+    try {
+        const q = query(
+            collection(FIRESTORE_DB, 'userLikedEvents'),
+            where('eventId', '==', eventId)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        // Loop through and delete each document
+        const batchSize = querySnapshot.docs.length;
+        if (batchSize === 0) {
+            console.log(`No likes found for event with ID: ${eventId}`);
+            return;
+        }
+
+        const deletePromises = querySnapshot.docs.map(async (docSnapshot) => {
+            const likedEventDocRef = doc(FIRESTORE_DB, 'userLikedEvents', docSnapshot.id);
+            return deleteDoc(likedEventDocRef);
+        });
+
+        // Execute all deletion promises
+        await Promise.all(deletePromises);
+
+        console.log(`Successfully removed all likes for event with ID: ${eventId}`);
+    } catch (error) {
+        console.error(`Error removing likes for event with ID: ${eventId}`, error);
+        throw new Error('Failed to remove likes for the event.');
+    }
+};

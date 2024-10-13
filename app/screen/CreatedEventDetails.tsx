@@ -15,6 +15,7 @@ import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {fetchUserById, fetchUserStats} from "../services/userService";
 import {SafeAreaView} from "react-native-safe-area-context";
 import UserInviteModal from "../modal/UserInviteModal";
+import {deleteEventById} from "../services/eventService";
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -112,7 +113,7 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
         }
 
         try {
-            await eventLeave(event.id, user.uid);
+            await deleteEventById(event.id);
             setIsJoined(false);
             setIsLeavingEvent(false);
             navigation.goBack();
@@ -311,12 +312,12 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                         </View>
                     </View>
 
-                    {/* Leave Event Section */}
+                    {/* Delete Event Section */}
                     {isJoined && (
                         <View style={styles.leaveEventContainer}>
-                            <Text style={styles.sectionTitle}>Leave Event</Text>
+                            <Text style={styles.sectionTitle}>Delete Event</Text>
                             <Text style={styles.warningText}>
-                                If you leave the event, there's no going back. Your spot will be made available to other participants.
+                                If you decide to delete this event, it will be removed from the system forever and this cannot be undone.
                             </Text>
                             <TouchableOpacity
                                 style={[
@@ -326,8 +327,8 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                                 onPress={() => {
                                     setIsLeavingEvent(true);
                                     Alert.alert(
-                                        "Leave Event",
-                                        "Are you sure you want to leave this event?",
+                                        "Delete Event",
+                                        "Are you sure you want to delete this event?",
                                         [
                                             {
                                                 text: "Cancel",
@@ -335,7 +336,7 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                                                 style: "cancel"
                                             },
                                             {
-                                                text: "Yes, Leave",
+                                                text: "Yes, Delete",
                                                 onPress: handleEventLeave
                                             }
                                         ]
@@ -346,7 +347,7 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                                     styles.leaveButtonText,
                                     isLeavingEvent ? styles.leaveButtonTextPressed : styles.leaveButtonTextNormal
                                 ]}>
-                                    Leave Event
+                                    Delete Event
                                 </Text>
                             </TouchableOpacity>
                         </View>

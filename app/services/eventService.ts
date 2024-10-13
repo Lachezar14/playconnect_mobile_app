@@ -1,10 +1,11 @@
 import {FIRESTORE_DB} from '../../firebaseConfig';
-import {addDoc, collection, doc, getDoc, getDocs, query, where} from 'firebase/firestore';
+import {addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, where} from 'firebase/firestore';
 import {Event, Suggestion} from '../utilities/interfaces';
-import {checkIfJoined} from "./eventParticipationService";
-import {getUserLikedEventIds} from "./userLikedEventsService";
+import {checkIfJoined, deleteParticipantsByEventId} from "./eventParticipationService";
+import {getUserLikedEventIds, removeAllLikesForEvent} from "./userLikedEventsService";
 import moment from 'moment';
 import {dbCounter} from "../utilities/dbCounter";
+import {deleteInvitesByEventId} from "./eventInviteService";
 
 // Cache for storing events locally
 const eventCache = new Map<string, Event>();
@@ -230,15 +231,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 // Method to create an event and save to Firestore
-export const createEvent = async (
-    userId: string,
-    title: string,
-    date: Date,
-    time: Date,
-    location: Suggestion,
-    sportType: string,
-    spots: number
-): Promise<void> => {
+export const createEvent = async (userId: string, title: string, date: Date, time: Date, location: Suggestion, sportType: string, spots: number): Promise<string> => {
     // Combine date and time into a single Date object and convert to UTC
     const eventDateTime = moment(date)
         .set({
@@ -252,7 +245,7 @@ export const createEvent = async (
 
     try {
         const eventCollection = collection(FIRESTORE_DB, 'events');
-        await addDoc(eventCollection, {
+        const eventDocRef = await addDoc(eventCollection, {
             userId,
             title,
             date: formattedDateTimeUTC,
@@ -266,8 +259,34 @@ export const createEvent = async (
             latitude: Number(location?.latitude),
             longitude: Number(location?.longitude),
         });
+
+        // Return the event ID
+        return eventDocRef.id;
     } catch (error) {
         console.error('Error adding event: ', error);
         throw new Error('Error creating event');
+    }
+};
+
+// Method to delete an event by eventId
+export const deleteEventById = async (eventId: string): Promise<void> => {
+    try {
+        // Step 1: Delete associated event participants
+        await deleteParticipantsByEventId(eventId);
+
+        // Step 2: Delete associated liked events
+        await deleteInvitesByEventId(eventId);
+
+        // Step 3: Delete associated event likes
+        await removeAllLikesForEvent(eventId);
+
+        // Step : Delete the event itself from the 'events' collection
+        const eventDocRef = doc(FIRESTORE_DB, 'events', eventId);
+        await deleteDoc(eventDocRef);
+
+        console.log(`Event with ID: ${eventId} has been successfully deleted.`);
+    } catch (error) {
+        console.error(`Error deleting event with ID: ${eventId}`, error);
+        throw new Error(`Failed to delete event with ID: ${eventId}`);
     }
 };

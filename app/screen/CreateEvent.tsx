@@ -6,10 +6,13 @@ import { useAuth } from '../context/AuthContext';
 import LocationInput from "../components/LocationInput";
 import {Suggestion} from "../utilities/interfaces";
 import {createEvent} from "../services/eventService";
+import {eventJoin} from "../services/eventParticipationService";
+import {useNavigation} from "@react-navigation/native";
 
 
 const CreateEvent = () => {
     const { user } = useAuth();
+    const navigation = useNavigation();
 
     // State to manage the current step
     const [currentStep, setCurrentStep] = useState(1);
@@ -36,13 +39,22 @@ const CreateEvent = () => {
         }
 
         try {
-            await createEvent(user?.uid || '', title, date, time, location, sportType, parseInt(spots));
+            // Create the event first
+            const eventId = await createEvent(user?.uid || '', title, date, time, location, sportType, parseInt(spots));
 
-            // Success message and reset form
-            Alert.alert('Event created successfully!');
+            // If event creation is successful, automatically join the creator to the event
+            if (eventId) {
+                await eventJoin(eventId, user?.uid || '');
+                Alert.alert('Event created and you have been automatically signed up!');
+            }
+
+            // Reset the form after success
             resetForm();
+            // Redirect to the My Events screen
+            navigation.goBack();
         } catch (error) {
-            Alert.alert('Error creating event, please try again');
+            console.error('Error during event creation or joining:', error);
+            Alert.alert('Error creating event or signing up, please try again.');
         }
     };
 

@@ -1,4 +1,4 @@
-import {addDoc, collection, getDocs, query, where} from "firebase/firestore";
+import {addDoc, collection, deleteDoc, getDocs, query, where} from "firebase/firestore";
 import {FIRESTORE_DB} from "../../firebaseConfig";
 import {EventInvite} from "../utilities/interfaces";
 
@@ -52,5 +52,26 @@ export const fetchEventInvitesByUserId = async (userId: string): Promise<EventIn
     } catch (error) {
         console.error("Error fetching event invites:", error);
         throw new Error("Failed to fetch event invites");
+    }
+};
+
+// Delete all event invites by event ID
+export const deleteInvitesByEventId = async (eventId: string): Promise<void> => {
+    try {
+        const eventInvitesQuery = query(
+            collection(FIRESTORE_DB, 'eventInvites'),
+            where('eventId', '==', eventId)
+        );
+        const querySnapshot = await getDocs(eventInvitesQuery);
+
+        const deletePromises = querySnapshot.docs.map((docSnapshot) =>
+            deleteDoc(docSnapshot.ref) // Use deleteDoc here
+        );
+
+        await Promise.all(deletePromises);
+        console.log(`Deleted all event invites for event: ${eventId}`);
+    } catch (error) {
+        console.error('Error deleting event invites:', error);
+        throw new Error('Failed to delete event invites for the event');
     }
 };
