@@ -9,23 +9,26 @@ import EventDetails from "../../screen/EventDetails";
 
 const MyEventsStack = createNativeStackNavigator();
 
-export default function JoinedEventsStackScreen({navigation,route}: any) {
+export default function JoinedEventsStackScreen({ navigation, route } : any) {
     React.useLayoutEffect(() => {
-        const routeName = getFocusedRouteNameFromRoute(route);
+        const routeName = getFocusedRouteNameFromRoute(route) ?? 'MyEvents';
         if (routeName === 'JoinedEventDetails' || routeName === 'CreatedEventDetails' || routeName === 'CreateEvent') {
-            navigation.setOptions({tabBarStyle: {display: 'none'}});
-        }else {
-            navigation.setOptions({tabBarStyle: {display: 'flex'}});
+            navigation.setOptions({ tabBarStyle: { display: 'none' } });
+        } else {
+            navigation.setOptions({ tabBarStyle: { display: 'flex' } });
         }
     }, [navigation, route]);
 
-
+    // @ts-ignore
     return (
         <MyEventsStack.Navigator>
             <MyEventsStack.Screen
                 name="MyEvents"
                 component={MyEvents}
-                options={{ title: 'My Events', headerShown: false }}
+                options={{
+                    title: 'My Events',
+                    headerShown: true  // Change this to true
+                }}
             />
             <MyEventsStack.Screen
                 name="EventDetails"
@@ -48,7 +51,7 @@ export default function JoinedEventsStackScreen({navigation,route}: any) {
             <MyEventsStack.Screen
                 name="CreateEvent"
                 component={CreateEvent}
-                options={{ title: 'Create Event'}}
+                options={{ title: 'Create Event', headerShown: false }}
             />
         </MyEventsStack.Navigator>
     );

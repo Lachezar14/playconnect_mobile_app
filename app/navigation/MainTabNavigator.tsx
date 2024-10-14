@@ -71,7 +71,7 @@ export default function MainTabNavigator() {
                 options={({ route }) => ({
                     title: 'My Events',
                     tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="calendar" size={size} color={color} />,
-                    headerShown: getFocusedRouteNameFromRoute(route) === 'MyEvents',
+                    headerShown: false,  // Remove header control from here
                     tabBarStyle: { display: getTabBarVisibility(route) }
                 })}
             />
@@ -80,7 +80,6 @@ export default function MainTabNavigator() {
                 component={InvitationsStack}
                 options={{
                     title: 'Invitations',
-                    headerShown: false,
                     tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name='inbox-full' size={size} color={color} />
                 }}
             />

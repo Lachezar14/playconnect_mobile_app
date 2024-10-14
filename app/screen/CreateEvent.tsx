@@ -5,9 +5,11 @@ import moment from 'moment';
 import { useAuth } from '../context/AuthContext';
 import LocationInput from "../components/LocationInput";
 import {Suggestion} from "../utilities/interfaces";
-import {createEvent} from "../services/eventService";
+import {createEvent, fetchEventById} from "../services/eventService";
 import {eventJoin} from "../services/eventParticipationService";
 import {useNavigation} from "@react-navigation/native";
+import UserInviteModal from "../modal/UserInviteModal";
+import {Event} from "../utilities/interfaces";
 
 
 const CreateEvent = () => {
@@ -20,12 +22,25 @@ const CreateEvent = () => {
     // Event form state
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [newEvent, setNewEvent] = useState<Event | null>(null);
     const [date, setDate] = useState<Date | undefined>(undefined);
     const [time, setTime] = useState<Date | undefined>(undefined);
     const [location, setLocation] = useState<Suggestion | null>(null);
     const [sportType, setSportType] = useState('');
     const [spots, setSpots] = useState('');
     const [shouldResetLocation, setShouldResetLocation] = useState(false);
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const openModal = () => {
+        setIsModalVisible(true);
+    };
+
+    // Close the modal and navigate back to the previous screen
+    const closeModal = () => {
+        setIsModalVisible(false);
+        navigation.goBack();
+    };
 
     // For displaying the date and time pickers
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -46,12 +61,15 @@ const CreateEvent = () => {
             if (eventId) {
                 await eventJoin(eventId, user?.uid || '');
                 Alert.alert('Event created and you have been automatically signed up!');
-            }
 
+                const newEvent = await fetchEventById(eventId);
+                setNewEvent(newEvent);
+            }
             // Reset the form after success
             resetForm();
-            // Redirect to the My Events screen
-            navigation.goBack();
+
+            // Open the invite modal
+            openModal();
         } catch (error) {
             console.error('Error during event creation or joining:', error);
             Alert.alert('Error creating event or signing up, please try again.');
@@ -186,6 +204,14 @@ const CreateEvent = () => {
                 )}
                 <Button title={currentStep === 3 ? 'Submit' : 'Next'} onPress={nextStep} />
             </View>
+
+            {/* Invite User Modal */}
+            <UserInviteModal
+                isVisible={isModalVisible}
+                onClose={closeModal}
+                event={newEvent as Event}
+                currentUserId={user?.uid || ''}
+            />
         </ScrollView>
     );
 };

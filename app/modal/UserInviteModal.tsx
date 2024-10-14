@@ -24,7 +24,7 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
     const [nearbyUsers, setNearbyUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [invitedUsers, setInvitedUsers] = useState<string[]>([]); // Track invited users
+    const [invitedUsers, setInvitedUsers] = useState<{ userId: string; status: string }[]>([]); // Track invited users and their invite status
     const insets = useSafeAreaInsets();
     const translateY = useRef(new Animated.Value(MODAL_HEIGHT)).current;
     const gestureY = useRef(new Animated.Value(0)).current;
@@ -42,8 +42,8 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
 
             // Fetch existing invites for the event and update invitedUsers state
             const existingInvites = await fetchEventInvitesByEventId(event.id);
-            const invitedUserIds = existingInvites.map(invite => invite.invitedUserId);
-            setInvitedUsers(invitedUserIds);
+            const invitedUserDetails = existingInvites.map(invite => ({ userId: invite.invitedUserId, status: invite.status }));
+            setInvitedUsers(invitedUserDetails);
         } catch (err) {
             setError('Failed to load nearby users');
             console.error('Error loading nearby users:', err);
@@ -55,7 +55,7 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
     // Function to handle inviting a user
     const handleInvite = async (userId: string) => {
         // Check if invite already exists
-        if (invitedUsers.includes(userId)) {
+        if (invitedUsers.some(user => user.userId === userId)) {
             console.log('User already invited to this event');
             return; // If invite already exists, return early
         }
@@ -71,7 +71,10 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
             // Save the invite to the database
             await addEventInvite(newEventInvite);
             // Update the invitedUsers state
-            setInvitedUsers((prevInvitedUsers) => [...prevInvitedUsers, userId]);
+            setInvitedUsers((prevInvitedUsers) => [
+                ...prevInvitedUsers,
+                { userId, status: 'pending' }
+            ]);
         } catch (error) {
             console.error('Failed to send invite:', error);
         }
@@ -169,17 +172,24 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
                         ) : nearbyUsers.length > 0 ? (
                             <FlatList
                                 data={nearbyUsers}
-                                keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => (
-                                    <UserInviteCard
-                                        profilePicture={item.profilePicture}
-                                        firstName={item.firstName}
-                                        lastName={item.lastName}
-                                        rating={item.userRating}
-                                        onInvite={() => handleInvite(item.id)}
-                                        invited={invitedUsers.includes(item.id)} // Check if the user is already invited
-                                    />
-                                )}
+                                keyExtractor={(item) => item.id ?? ''}
+                                renderItem={({ item }) => {
+                                    const invite = invitedUsers.find(invite => invite.userId === item.id);
+                                    const isInvited = !!invite;
+                                    const inviteStatus = invite ? invite.status : null;
+
+                                    return (
+                                        <UserInviteCard
+                                            profilePicture={item.profilePicture}
+                                            firstName={item.firstName}
+                                            lastName={item.lastName}
+                                            rating={item.userRating}
+                                            onInvite={() => handleInvite(item.id)}
+                                            invited={isInvited} // Check if the user is already invited
+                                            status={inviteStatus} // Pass the status (e.g., pending, accepted)
+                                        />
+                                    );
+                                }}
                             />
                         ) : (
                             <Text style={styles.messageText}>No nearby users found</Text>

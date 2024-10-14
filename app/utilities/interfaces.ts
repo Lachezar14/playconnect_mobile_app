@@ -26,6 +26,7 @@ export interface User {
     favouriteSport: string;
     latitude: number;
     longitude: number;
+    userRating: number;
 }
 
 export interface EventParticipant {
@@ -63,7 +64,7 @@ export interface Suggestion {
 }
 
 export interface EventInvite {
-    id: string;
+    id?: string;
     eventCreatorId: string;
     eventId: string;
     invitedUserId: string;

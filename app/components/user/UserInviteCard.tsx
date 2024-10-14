@@ -1,4 +1,3 @@
-// UserCard.js
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import {Feather} from "@expo/vector-icons";
@@ -11,9 +10,13 @@ interface UserInviteProps {
     rating: number;
     onInvite: () => void;
     invited: boolean;
+    status: 'pending' | 'accepted' | 'declined';
 }
 
-const UserInviteCard: React.FC<UserInviteProps> = ({ profilePicture, firstName, lastName, rating, onInvite, invited }) => {
+const UserInviteCard: React.FC<UserInviteProps> = ({ profilePicture, firstName, lastName, rating, onInvite, invited, status }) => {
+    // Determine the invite status message and text color
+    //const statusMessage = status === 'pending' ? 'Invited' : status.charAt(0).toUpperCase() + status.slice(1);
+
     return (
         <View style={styles.card}>
             <Image source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }} style={styles.image} />
@@ -31,8 +34,8 @@ const UserInviteCard: React.FC<UserInviteProps> = ({ profilePicture, firstName, 
                 style={[styles.inviteButton, invited && styles.invitedButton]}
                 disabled={invited}
             >
-                <Text style={[styles.inviteButtonText, invited && styles.invitedButtonText]}>
-                    {invited ? 'Invited' : 'Invite'}
+                <Text style={status === 'accepted' ? styles.acceptedButtonText : status === 'declined' ? styles.declinedButtonText : status === 'pending' ? styles.invitedButtonText : styles.inviteButtonText}>
+                    {status === 'accepted' ? 'Accepted' : status === 'declined' ? 'Declined' : status === 'pending' ? 'Invited' : 'Invite'}
                 </Text>
             </TouchableOpacity>
         </View>
@@ -90,8 +93,18 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     invitedButtonText: {
-        color: '#38A169', // Green text on white background when invited
-        fontSize: 12,
+        color: '#7e7e7e', // Green text on white background when invited
+        fontSize: 13,
+        fontWeight: 'bold',
+    },
+    acceptedButtonText: {
+        color: '#38A169',
+        fontSize: 13,
+        fontWeight: 'bold',
+    },
+    declinedButtonText: {
+        color: '#E53E3E',
+        fontSize: 13,
         fontWeight: 'bold',
     },
     ratingContainer: {
