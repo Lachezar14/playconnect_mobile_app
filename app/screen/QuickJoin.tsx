@@ -10,6 +10,7 @@ import {addDistanceToEvents, fetchUpcomingEventsNotJoinedByUser} from "../servic
 import { Event } from '../utilities/interfaces';
 import {eventJoin} from "../services/eventParticipationService";
 import {useAuth} from "../context/AuthContext";
+import CustomAlert from "../components/CustomAlert";
 
 const defaultFilters = { sport: 'All', maxDistance: 50 };
 
@@ -79,7 +80,8 @@ const QuickJoin = ({ navigation, route }) => {
 
         try {
             await eventJoin(event.id, user.uid);
-            //navigation.navigate('MyEvents');
+            Alert.alert('Event Joined', 'You have successfully joined the event!');
+
         } catch (error: Error | any) {
             if (error.message === 'No more places available') {
                 Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');

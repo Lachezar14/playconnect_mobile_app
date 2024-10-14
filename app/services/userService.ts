@@ -59,8 +59,14 @@ export const updateUserPreferences = async (userId: string, favouriteSport: stri
     }
 };
 
-// Fetch nearby users - 10 km radius by default
-export const fetchNearbyUsers = async ( eventLatitude: any, eventLongitude: any, favouriteSport: string, currentUserId: string, radius = 10): Promise<User[]> => {
+// Fetch nearby users by sport and available status - 10 km radius by default
+export const fetchNearbyUsers = async (
+    eventLatitude: any,
+    eventLongitude: any,
+    favouriteSport: string,
+    currentUserId: string,
+    radius = 10
+): Promise<User[]> => {
     try {
         const usersSnapshot = await getDocs(collection(FIRESTORE_DB, 'users'));
         const nearbyUsers = usersSnapshot.docs
@@ -72,26 +78,29 @@ export const fetchNearbyUsers = async ( eventLatitude: any, eventLongitude: any,
                     return false;
                 }
 
+                // Check if user has location data
                 if (!user.latitude || !user.longitude) {
                     console.log(`User ${user.id} missing location data`);
                     return false;
                 }
 
+                // Calculate distance from the event
                 const distance = calculateDistance(
                     eventLatitude,
                     eventLongitude,
                     user.latitude,
                     user.longitude
                 );
-
                 console.log(`User ${user.id} distance: ${distance.toFixed(2)} meters`);
 
+                // Check if the user is nearby, has the same favorite sport, and is available
                 const isNearby = distance <= radius * 1000; // Convert radius to meters
                 const hasSameSport = user.favouriteSport === favouriteSport;
+                const isAvailable = user.isAvailable === true;
 
-                console.log(`User ${user.id} isNearby: ${isNearby}, hasSameSport: ${hasSameSport}`);
+                console.log(`User ${user.id} isNearby: ${isNearby}, hasSameSport: ${hasSameSport}, isAvailable: ${isAvailable}`);
 
-                return isNearby && hasSameSport;
+                return isNearby && hasSameSport && isAvailable;
             });
 
         console.log(`Total nearby users found: ${nearbyUsers.length}`);

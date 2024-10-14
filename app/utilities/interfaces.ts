@@ -63,6 +63,7 @@ export interface Suggestion {
 }
 
 export interface EventInvite {
+    id: string;
     eventCreatorId: string;
     eventId: string;
     invitedUserId: string;

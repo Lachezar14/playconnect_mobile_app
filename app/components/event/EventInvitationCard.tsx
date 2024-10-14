@@ -206,9 +206,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     eventTitle: {
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     row: {
         flexDirection: 'row',

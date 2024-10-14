@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Using Ionicons, but you can replace it with another icon library
+import {Feather, Ionicons} from '@expo/vector-icons'; // Using Ionicons
 
 type AlertProps = {
     message: string;
@@ -8,17 +8,21 @@ type AlertProps = {
 };
 
 const CustomAlert: React.FC<AlertProps> = ({ message, type }) => {
-    const icon = type === 'success' ? 'checkmark-circle' :
-        type === 'error' ? 'close-circle' : 'information-circle';
-    const circleColor = type === 'success' ? '#4CAF50' :
-        type === 'error' ? '#F44336' : '#2196F3'; // Green for success, red for error, blue for info
+    const icon = type === 'success' ? 'check' :
+        type === 'error' ? 'x' : 'info';
+    const circleColor = type === 'success' ? '#22C55E' : // Adjusted to a more vibrant green
+        type === 'error' ? '#F44336' : '#2196F3'; // Red for error, blue for info
+    const backgroundColor = type === 'success' ? '#F1FAF5' :
+        type === 'error' ? '#FDECEA' : '#EAF4FB'; // Light green for success, light red for error, light blue for info
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor }]}>
             <View style={[styles.circle, { backgroundColor: circleColor }]}>
-                <Ionicons name={icon} size={24} color="#fff" />
+                <Feather name={icon} size={28} color="white" />
             </View>
-            <Text style={styles.message}>{message}</Text>
+            <View>
+                <Text style={styles.message}>{message}</Text>
+            </View>
         </View>
     );
 };
@@ -27,26 +31,33 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 35,
-        padding: 15,
+        borderRadius: 12,
+        padding: 16,
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowRadius: 6,
         shadowOffset: { width: 0, height: 2 },
-        elevation: 5, // for Android shadow
+        elevation: 5, // Android shadow
+        marginHorizontal: 20,
     },
     circle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
     },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#16A34A', // Dark green for success title
+        marginBottom: 2,
+    },
     message: {
+        fontWeight: '500',
         fontSize: 17,
-        color: '#333',
+        color: '#7e7e7e', // Grey for the message
     },
 });
 
