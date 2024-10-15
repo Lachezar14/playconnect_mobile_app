@@ -165,6 +165,7 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
                                 <Feather name="x" size={20} color="black" />
                             </TouchableOpacity>
                         </View>
+                        <Text style={styles.messageText}>Invite players to join your sport event</Text>
                         {loading ? (
                             <Text style={styles.messageText}>Loading...</Text>
                         ) : error ? (
@@ -211,15 +212,14 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-
         height: MODAL_HEIGHT,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between', // Space between title and button
-        marginBottom: 40,
         paddingHorizontal: 20,
+        marginBottom: 10,
     },
     title: {
         fontSize: 24,
@@ -232,9 +232,10 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     messageText: {
-        fontSize: 18,
-        textAlign: 'center',
-        marginTop: 20,
+        fontSize: 16,
+        marginBottom: 20,
+        marginLeft: 20,
+        color: 'gray',
     },
 });
 

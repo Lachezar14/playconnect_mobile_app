@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import {Feather} from "@expo/vector-icons";
+import {Feather, FontAwesome} from "@expo/vector-icons";
 
 // Define the types for the props
 interface UserInviteProps {
@@ -24,7 +24,7 @@ const UserInviteCard: React.FC<UserInviteProps> = ({ profilePicture, firstName, 
             <View style={styles.textContainer}>
                 <Text style={styles.name}>{`${firstName} ${lastName}`}</Text>
                 <View style={styles.ratingContainer}>
-                    <Feather name="star" type="font-awesome" color="black" size={18} />
+                    <FontAwesome name="star" size={18} color="gold" />
                     <Text style={styles.rating}>{rating}</Text>
                 </View>
             </View>
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     rating: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#555',
         marginLeft: 4,
     },
