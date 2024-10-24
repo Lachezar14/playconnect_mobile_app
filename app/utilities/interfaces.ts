@@ -27,6 +27,8 @@ export interface User {
     latitude: number;
     longitude: number;
     userRating: number;
+    skillLevel: string;
+    availability: string[];
 }
 
 export interface EventParticipant {

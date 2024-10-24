@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Button, ActivityIndicator } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import {doc, runTransaction} from 'firebase/firestore';
+import { View, StyleSheet, TextInput, Button, ActivityIndicator } from 'react-native';
 import { AuthStackParamList } from '../utilities/AuthStackParamList';
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -23,37 +20,7 @@ const Register: React.FC<RegisterProps> = ({ navigation }) => {
     const signUp = async () => {
         setLoading(true);
         try {
-            // Create a new user with Firebase Authentication
-            const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
-            const user = userCredential.user;
-
-            // Run a Firestore transaction to add the user to both collections atomically
-            await runTransaction(FIRESTORE_DB, async (transaction) => {
-                const userRef = doc(FIRESTORE_DB, 'users', user.uid);
-                const userStatsRef = doc(FIRESTORE_DB, 'userStats', user.uid);
-
-                // Add user data to the "users" collection
-                transaction.set(userRef, {
-                    firstName,
-                    lastName,
-                    email: user.email,
-                    userId: user.uid
-                });
-
-                // Add initial stats to the "userStats" collection
-                transaction.set(userStatsRef, {
-                    userId: user.uid,
-                    totalEventsJoined: 0,
-                    totalEventsCreated: 0,
-                    favouriteSport: '',
-                    userRating: 3,
-                    totalEventsCheckedIn: 0,
-                    checkInPercentage: 0,
-                });
-            });
-
-            // Navigate the user to the main app after sign-up
-            navigation.navigate('Inside');
+            navigation.navigate('Onboarding', { firstName, lastName, email, password });
         } catch (error) {
             console.log('Error creating user: ', error);
         } finally {

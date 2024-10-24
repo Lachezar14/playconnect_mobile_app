@@ -51,7 +51,7 @@ export default function JoinedEventsStackScreen({ navigation, route } : any) {
             <MyEventsStack.Screen
                 name="CreateEvent"
                 component={CreateEvent}
-                options={{ title: 'Create Event', headerShown: false }}
+                options={{ title: 'Create Event'}}
             />
         </MyEventsStack.Navigator>
     );

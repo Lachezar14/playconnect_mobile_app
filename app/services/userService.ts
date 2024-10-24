@@ -46,18 +46,20 @@ export const fetchUserStats = async (userId: string): Promise<UserStats | null> 
 };
 
 // New function to update user preferences (favourite sport and availability)
-export const updateUserPreferences = async (userId: string, favouriteSport: string, isAvailable: boolean): Promise<void> => {
+export const updateUserPreferences = async (userId: string, favouriteSport: string, skillLevel: string, availability: string[]): Promise<void> => {
     try {
         const userDocRef = doc(FIRESTORE_DB, 'users', userId);
         await updateDoc(userDocRef, {
-            favouriteSport,   // Save the favourite sport
-            isAvailable       // Save availability status
+            favouriteSport,    // Save the favourite sport
+            skillLevel,        // Save the skill level
+            availability       // Save the availability array
         });
         console.log('User preferences updated successfully');
     } catch (error) {
         console.error('Error updating user preferences:', error);
     }
 };
+
 
 // Fetch nearby users by sport and available status - 10 km radius by default
 export const fetchNearbyUsers = async (

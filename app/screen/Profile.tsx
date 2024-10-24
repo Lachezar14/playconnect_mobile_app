@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import {MaterialIcons, Feather, Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import {FIREBASE_AUTH, FIRESTORE_DB} from "../../firebaseConfig";
 import { useNavigation, NavigationProp } from '@react-navigation/native';  // Import NavigationProp for typing
 import { ProfileStackParamList } from '../navigation/stack/ProfileStack';
-import {collection, doc, getDoc, getDocs, getFirestore, query, where} from "firebase/firestore";
+import { doc, getDoc} from "firebase/firestore";
 import {User} from "../utilities/interfaces";
 
 // Correctly type the navigation object
@@ -15,7 +15,7 @@ const Profile = () => {
     const navigation = useNavigation<ProfileScreenNavigationProp>();
     const { user } = useAuth(); // Get the current user from AuthContext
     const [userData, setUserData] = useState<User | null>(null);
-    const [userRating, setUserRating] = useState<number | null>(null);
+    //const [userRating, setUserRating] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
@@ -44,32 +44,32 @@ const Profile = () => {
         }
     };
 
-    const fetchUserRating = async () => {
-        if (!user) return;
-
-        try {
-            // Query the userStats collection to find the document where userId matches the user's UID
-            const userStatsRef = collection(FIRESTORE_DB, 'userStats');
-            const q = query(userStatsRef, where('userId', '==', user.uid));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                const userStatsData = querySnapshot.docs[0].data();
-                setUserRating(userStatsData.userRating || null);  // Assuming userRating is stored in userStats
-            } else {
-                console.log('No user stats found');
-                setUserRating(null);
-            }
-        } catch (err) {
-            console.error('Error fetching user rating:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // const fetchUserRating = async () => {
+    //     if (!user) return;
+    //
+    //     try {
+    //         // Query the userStats collection to find the document where userId matches the user's UID
+    //         const userStatsRef = collection(FIRESTORE_DB, 'userStats');
+    //         const q = query(userStatsRef, where('userId', '==', user.uid));
+    //         const querySnapshot = await getDocs(q);
+    //
+    //         if (!querySnapshot.empty) {
+    //             const userStatsData = querySnapshot.docs[0].data();
+    //             setUserRating(userStatsData.userRating || null);  // Assuming userRating is stored in userStats
+    //         } else {
+    //             console.log('No user stats found');
+    //             setUserRating(null);
+    //         }
+    //     } catch (err) {
+    //         console.error('Error fetching user rating:', err);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     useEffect(() => {
         fetchUserData();
-        fetchUserRating();
+        //fetchUserRating();
     }, [user]); // Fetch user data when the user changes
 
     const renderStars = (rating: number | null) => {
@@ -112,9 +112,9 @@ const Profile = () => {
 
             {/* Star Rating */}
             <View style={styles.ratingContainer}>
-                {renderStars(userRating)}
+                {renderStars(userData?.userRating)}
                 <Text style={styles.ratingText}>
-                    {userRating !== null ? `${userRating}/5` : 'No rating available'}
+                    {userData?.userRating !== null ? `${userData?.userRating}/5` : 'No rating available'}
                 </Text>
             </View>
 
