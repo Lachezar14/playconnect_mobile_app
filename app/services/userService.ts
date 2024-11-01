@@ -113,4 +113,33 @@ export const fetchNearbyUsers = async (
     }
 };
 
+// New function to fetch users by criteria
+export const fetchCompatibleUsers = async (
+    favouriteSport: string,
+    skillLevel: string,
+    day: string,
+    currentUserId: string
+): Promise<User[]> => {
+    try {
+        const usersCollection = collection(FIRESTORE_DB, 'users');
+        const q = query(
+            usersCollection,
+            where('favouriteSport', '==', favouriteSport),
+            where('skillLevel', '==', skillLevel),
+            where('availability', 'array-contains', day)
+        );
+
+        const querySnapshot = await getDocs(q);
+        const users = querySnapshot.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() } as User))
+            .filter((user) => user.id !== currentUserId); // Exclude current user
+
+        console.log(`Total users found: ${users.length}`);
+        return users;
+    } catch (error) {
+        console.error('Error fetching users by criteria:', error);
+        return [];
+    }
+};
+
 // ... other existing methods in userService.ts

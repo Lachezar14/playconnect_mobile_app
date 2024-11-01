@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Platform } from "react-native";
+import {Platform, View, StyleSheet, Text} from "react-native";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import EventsStack from './stack/EventsStack';
 import ProfileStack from './stack/ProfileStack';
@@ -9,6 +9,7 @@ import QuickJoinStack from "./stack/QuickJoinStack";
 import MyEventsStackScreen from "./stack/MyEventsStack";
 import InvitationsStack from "./stack/InvitationsStack";
 import CustomTabBar from './CustomTabBar';
+import {useEventInvites} from "../context/EventInvitesContext";
 
 const Tab = createBottomTabNavigator();
 
@@ -27,6 +28,8 @@ const getTabBarVisibility = (route) => {
 };
 
 export default function MainTabNavigator() {
+    const { invitationCount } = useEventInvites();
+
     return (
         <Tab.Navigator
             initialRouteName="Events"
@@ -80,7 +83,16 @@ export default function MainTabNavigator() {
                 component={InvitationsStack}
                 options={{
                     title: 'Invitations',
-                    tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name='inbox-full' size={size} color={color} />
+                    tabBarIcon: ({ color, size }) => (
+                        <View>
+                            <MaterialCommunityIcons name='inbox-full' size={size} color={color} />
+                            {invitationCount > 0 && (
+                                <View style={styles.badgeContainer}>
+                                    <Text style={styles.badgeText}>{invitationCount}</Text>
+                                </View>
+                            )}
+                        </View>
+                    ),
                 }}
             />
             <Tab.Screen
@@ -95,3 +107,22 @@ export default function MainTabNavigator() {
         </Tab.Navigator>
     );
 }
+
+const styles = StyleSheet.create({
+    badgeContainer: {
+        position: 'absolute',
+        right: -6,
+        top: -3,
+        backgroundColor: 'red',
+        borderRadius: 8,
+        width: 16,
+        height: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    badgeText: {
+        color: 'white',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+});
