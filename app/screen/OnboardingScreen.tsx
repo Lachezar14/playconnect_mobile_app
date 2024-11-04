@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import {View, Text, Button, StyleSheet, TouchableOpacity} from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {MaterialIcons} from "@expo/vector-icons";
-import {createUserWithEmailAndPassword} from "firebase/auth";
-import {FIREBASE_AUTH, FIRESTORE_DB} from "../../firebaseConfig";
-import {doc, runTransaction} from "firebase/firestore";
+import { MaterialIcons } from "@expo/vector-icons";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
+import { doc, runTransaction } from "firebase/firestore";
+import {CommonActions} from "@react-navigation/native";
 
 const sports = ['Football', 'Tennis', 'Basketball', 'Running'];
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -13,33 +14,36 @@ const skillLevels = ['Beginner', 'Intermediate', 'Advanced'];
 const Onboarding = ({ route, navigation }) => {
     const [step, setStep] = useState(0);  // Track the current step
     const [selectedSport, setSelectedSport] = useState('');
-    const [selectedDays, setSelectedDays] = useState<string[]>([]);
+    const [selectedDays, setSelectedDays] = useState([]);
     const [selectedSkill, setSelectedSkill] = useState('');
     const { password, email, firstName, lastName } = route.params;
-    console.log('Email:', email, 'First Name:', firstName, 'Last Name:', lastName);
 
     const handleNext = () => {
         if (step < 2) {
             setStep(step + 1);
         } else {
-            // After the last step, save the preferences to Firestore and navigate to the main app
             savePreferences();
-            navigation.navigate('Main');  // Navigate to the main app
+            navigation.navigate('Main', {
+                screen: 'EventsTab'  // Use the actual tab screen name from MainTabNavigator
+            });
+        }
+    };
+
+    const handleBack = () => {
+        if (step > 0) {
+            setStep(step - 1);
+        } else {
+            navigation.goBack();
         }
     };
 
     const savePreferences = async () => {
         try {
-            // Create a new user with Firebase Authentication
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
 
-            // Run a Firestore transaction to add the user to both collections atomically
             await runTransaction(FIRESTORE_DB, async (transaction) => {
                 const userRef = doc(FIRESTORE_DB, 'users', user.uid);
-                //const userStatsRef = doc(FIRESTORE_DB, 'userStats', user.uid);
-
-                // Add user data to the "users" collection
                 transaction.set(userRef, {
                     firstName,
                     lastName,
@@ -51,19 +55,8 @@ const Onboarding = ({ route, navigation }) => {
                     userRating: 3,
                     isAvailable: true,
                 });
-
-                // Add initial stats to the "userStats" collection
-                // transaction.set(userStatsRef, {
-                //     userId: user.uid,
-                //     totalEventsJoined: 0,
-                //     totalEventsCreated: 0,
-                //     favouriteSport: '',
-                //     userRating: 3,
-                //     totalEventsCheckedIn: 0,
-                //     checkInPercentage: 0,
-                // });
             });
-            // navigation.navigate('MainTabNavigator', { screen: 'QuickJoinTab' });
+            console.log(selectedSport, selectedDays, selectedSkill);
         } catch (error) {
             console.log('Error creating user: ', error);
         }
@@ -73,31 +66,69 @@ const Onboarding = ({ route, navigation }) => {
         <SafeAreaView style={styles.container}>
             {step === 0 && (
                 <View style={styles.section}>
+                    <Text style={styles.heading}>Favourite Sports</Text>
+                    <Text style={styles.subheading}>
+                        Choose your favourite sports so we can show you events related to those sports!
+                    </Text>
                     {sports.map((sport) => (
-                        <View key={sport} style={styles.radioButtonRow}>
+                        <TouchableOpacity
+                            key={sport}
+                            style={[
+                                styles.radioButtonRow,
+                                selectedSport === sport && styles.selectedItem
+                            ]}
+                            onPress={() => setSelectedSport(sport)}
+                        >
                             <Text style={styles.sportName}>{sport}</Text>
-                            <TouchableOpacity
-                                onPress={() => setSelectedSport(sport)}
-                                style={styles.radioButton}
-                            >
-                                {selectedSport === sport ? (
-                                    <MaterialIcons name="radio-button-checked" size={24} color="#38A169" />
-                                ) : (
-                                    <MaterialIcons name="radio-button-unchecked" size={24} color="#767577" />
-                                )}
-                            </TouchableOpacity>
-                        </View>
+                            <MaterialIcons
+                                name={selectedSport === sport ? "radio-button-checked" : "radio-button-unchecked"}
+                                size={24}
+                                color={selectedSport === sport ? "#38A169" : "#767577"}
+                            />
+                        </TouchableOpacity>
                     ))}
                 </View>
             )}
 
             {step === 1 && (
-                <View>
-                    <Text style={styles.title}>Which days are you available?</Text>
+                <View style={styles.section}>
+                    <Text style={styles.heading}>What's your skill level?</Text>
+                    <Text style={styles.subheading}>
+                        Tell us your skill level so we can match you with users of similar skill levels!
+                    </Text>
+                    {skillLevels.map((skill) => (
+                        <TouchableOpacity
+                            key={skill}
+                            style={[
+                                styles.radioButtonRow,
+                                selectedSkill === skill && styles.selectedItem
+                            ]}
+                            onPress={() => setSelectedSkill(skill)}
+                        >
+                            <Text style={styles.sportName}>{skill}</Text>
+                            <MaterialIcons
+                                name={selectedSkill === skill ? "radio-button-checked" : "radio-button-unchecked"}
+                                size={24}
+                                color={selectedSkill === skill ? "#38A169" : "#767577"}
+                            />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
+
+            {step === 2 && (
+                <View style={styles.section}>
+                    <Text style={styles.heading}>Which days are you available?</Text>
+                    <Text style={styles.subheading}>
+                        Select the days you are available to play sports so we can suggest events on those days!
+                    </Text>
                     {daysOfWeek.map((day) => (
-                        <Button
+                        <TouchableOpacity
                             key={day}
-                            title={selectedDays.includes(day) ? `${day} (Selected)` : day}
+                            style={[
+                                styles.checkboxRow,
+                                selectedDays.includes(day) && styles.selectedItem
+                            ]}
                             onPress={() => {
                                 if (selectedDays.includes(day)) {
                                     setSelectedDays(selectedDays.filter(d => d !== day));
@@ -105,35 +136,26 @@ const Onboarding = ({ route, navigation }) => {
                                     setSelectedDays([...selectedDays, day]);
                                 }
                             }}
-                        />
+                        >
+                            <Text style={styles.sportName}>{day}</Text>
+                            <MaterialIcons
+                                name={selectedDays.includes(day) ? "check-box" : "check-box-outline-blank"}
+                                size={24}
+                                color={selectedDays.includes(day) ? "#38A169" : "#767577"}
+                            />
+                        </TouchableOpacity>
                     ))}
                 </View>
             )}
 
-            {step === 2 && (
-                <View>
-                    <Text style={styles.title}>What's your skill level?</Text>
-                    <View style={styles.section}>
-                        {skillLevels.map((skill) => (
-                            <View key={skill} style={styles.radioButtonRow}>
-                                <Text style={styles.sportName}>{skill}</Text>
-                                <TouchableOpacity
-                                    onPress={() => setSelectedSkill(skill)}
-                                    style={styles.radioButton}
-                                >
-                                    {selectedSkill === skill ? (
-                                        <MaterialIcons name="radio-button-checked" size={24} color="#38A169" />
-                                    ) : (
-                                        <MaterialIcons name="radio-button-unchecked" size={24} color="#767577" />
-                                    )}
-                                </TouchableOpacity>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            )}
-
-            <Button title={step === 2 ? 'Finish' : 'Next'} onPress={handleNext} />
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                    <Text style={styles.buttonText}>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+                    <Text style={styles.buttonText}>{step === 2 ? 'Finish' : 'Next'}</Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 };
@@ -141,20 +163,24 @@ const Onboarding = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        padding: 16,
+        padding: 20,
+        backgroundColor: '#F7F8FA',
     },
     title: {
         fontSize: 24,
         marginBottom: 16,
         textAlign: 'center',
     },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 16,
+    heading: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1A202C',
+        marginBottom: 8,
+    },
+    subheading: {
+        fontSize: 14,
+        color: '#718096',
+        marginBottom: 24,
     },
     section: {
         marginTop: 20,
@@ -163,14 +189,66 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        padding: 12,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
         marginBottom: 12,
+        borderColor: '#E2E8F0',
+        borderWidth: 1,
+    },
+    checkboxRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 12,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        marginBottom: 12,
+        borderColor: '#E2E8F0',
+        borderWidth: 1,
     },
     sportName: {
         fontSize: 18,
+        color: '#2D3748',
     },
-    radioButton: {
-        padding: 8,
+    selectedItem: {
+        borderColor: '#38A169',
+        borderWidth: 2,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 'auto',
+        marginBottom: 20,
+    },
+    backButton: {
+        backgroundColor: '#CBD5E0',
+        borderRadius: 25,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        flex: 0.45,
+    },
+    nextButton: {
+        backgroundColor: '#38A169',
+        borderRadius: 25,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        flex: 0.45,
+    },
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    nextButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
 export default Onboarding;
+
+
