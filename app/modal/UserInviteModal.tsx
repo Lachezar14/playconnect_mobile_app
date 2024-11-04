@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {Modal, View, Text, FlatList, StyleSheet, Animated, Dimensions, TouchableOpacity} from 'react-native';
-import { fetchNearbyUsers } from "../services/userService";
+import {fetchCompatibleUsers, fetchNearbyUsers} from "../services/userService";
 import UserInviteCard from "../components/user/UserInviteCard";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {PanGestureHandler, PanGestureHandlerStateChangeEvent, State} from "react-native-gesture-handler";
@@ -8,6 +8,7 @@ import {EventInvite, User, Event} from "../utilities/interfaces";
 import {addEventInvite, fetchEventInvitesByEventId} from "../services/eventInviteService";
 import {useAuth} from "../context/AuthContext";
 import {Feather, Ionicons} from "@expo/vector-icons";
+import {getDayOfWeek} from "../utilities/getDayOfWeek";
 
 const { height } = Dimensions.get('window');
 const MODAL_HEIGHT = height * 0.9;
@@ -36,7 +37,9 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
         setError(null);
         try {
             // Fetch nearby users
-            const users = await fetchNearbyUsers(event.latitude, event.longitude, event.sportType, currentUserId);
+            //const users = await fetchNearbyUsers(event.latitude, event.longitude, event.sportType, currentUserId);
+            // Fetch compatible users
+            const users = await fetchCompatibleUsers(event.sportType, "Intermediate", getDayOfWeek(event.date), currentUserId);
             setNearbyUsers(users);
             console.log('Nearby users loaded:', users);
 
@@ -160,7 +163,7 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
                         ]}
                     >
                         <View style={styles.header}>
-                            <Text style={styles.title}>Nearby Users</Text>
+                            <Text style={styles.title}>Invite Users</Text>
                             <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
                                 <Feather name="x" size={20} color="black" />
                             </TouchableOpacity>

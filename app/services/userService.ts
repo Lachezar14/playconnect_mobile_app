@@ -46,18 +46,20 @@ export const fetchUserStats = async (userId: string): Promise<UserStats | null> 
 };
 
 // New function to update user preferences (favourite sport and availability)
-export const updateUserPreferences = async (userId: string, favouriteSport: string, isAvailable: boolean): Promise<void> => {
+export const updateUserPreferences = async (userId: string, favouriteSport: string, skillLevel: string, availability: string[]): Promise<void> => {
     try {
         const userDocRef = doc(FIRESTORE_DB, 'users', userId);
         await updateDoc(userDocRef, {
-            favouriteSport,   // Save the favourite sport
-            isAvailable       // Save availability status
+            favouriteSport,    // Save the favourite sport
+            skillLevel,        // Save the skill level
+            availability       // Save the availability array
         });
         console.log('User preferences updated successfully');
     } catch (error) {
         console.error('Error updating user preferences:', error);
     }
 };
+
 
 // Fetch nearby users by sport and available status - 10 km radius by default
 export const fetchNearbyUsers = async (
@@ -107,6 +109,35 @@ export const fetchNearbyUsers = async (
         return nearbyUsers;
     } catch (error) {
         console.error('Error fetching nearby users:', error);
+        return [];
+    }
+};
+
+// New function to fetch users by criteria
+export const fetchCompatibleUsers = async (
+    favouriteSport: string,
+    skillLevel: string,
+    day: string,
+    currentUserId: string
+): Promise<User[]> => {
+    try {
+        const usersCollection = collection(FIRESTORE_DB, 'users');
+        const q = query(
+            usersCollection,
+            where('favouriteSport', '==', favouriteSport),
+            where('skillLevel', '==', skillLevel),
+            where('availability', 'array-contains', day)
+        );
+
+        const querySnapshot = await getDocs(q);
+        const users = querySnapshot.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() } as User))
+            .filter((user) => user.id !== currentUserId); // Exclude current user
+
+        console.log(`Total users found: ${users.length}`);
+        return users;
+    } catch (error) {
+        console.error('Error fetching users by criteria:', error);
         return [];
     }
 };
