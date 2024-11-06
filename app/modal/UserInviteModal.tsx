@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {Modal, View, Text, FlatList, StyleSheet, Animated, Dimensions, TouchableOpacity} from 'react-native';
-import {fetchCompatibleUsers, fetchNearbyUsers} from "../services/userService";
+import {fetchCompatibleUsers} from "../services/userService";
 import UserInviteCard from "../components/user/UserInviteCard";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {PanGestureHandler, PanGestureHandlerStateChangeEvent, State} from "react-native-gesture-handler";

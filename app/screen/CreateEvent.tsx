@@ -4,12 +4,15 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import { useAuth } from '../context/AuthContext';
 import LocationInput from "../components/LocationInput";
-import {Suggestion} from "../utilities/interfaces";
+import {EventInvite, Suggestion} from "../utilities/interfaces";
 import {createEvent, fetchEventById} from "../services/eventService";
 import {eventJoin} from "../services/eventParticipationService";
 import {useNavigation} from "@react-navigation/native";
 import UserInviteModal from "../modal/UserInviteModal";
 import {Event} from "../utilities/interfaces";
+import {fetchCompatibleUsers} from "../services/userService";
+import {getDayOfWeek} from "../utilities/getDayOfWeek";
+import {addEventInvite} from "../services/eventInviteService";
 
 
 const CreateEvent = () => {
@@ -54,25 +57,27 @@ const CreateEvent = () => {
         }
 
         try {
-            // Create the event first
+            // Step 1: Create the event
             const eventId = await createEvent(user?.uid || '', title, date, time, location, sportType, parseInt(spots));
 
-            // If event creation is successful, automatically join the creator to the event
             if (eventId) {
+                // Step 2: Join the creator to the event automatically
                 await eventJoin(eventId, user?.uid || '');
                 Alert.alert('Event created and you have been automatically signed up!');
 
+                // Step 3: Fetch the newly created event details
                 const newEvent = await fetchEventById(eventId);
-                setNewEvent(newEvent);
-            }
-            // Reset the form after success
-            resetForm();
 
-            // Open the invite modal
-            openModal();
+                // Step 4: Automatically invite compatible users
+                await inviteCompatibleUsers(newEvent);
+
+                // Reset form after success
+                resetForm();
+                navigation.goBack();
+            }
         } catch (error) {
-            console.error('Error during event creation or joining:', error);
-            Alert.alert('Error creating event or signing up, please try again.');
+            console.error('Error during event creation or inviting users:', error);
+            Alert.alert('Error creating event or inviting users, please try again.');
         }
     };
 
@@ -85,6 +90,33 @@ const CreateEvent = () => {
         setSpots('');
         setShouldResetLocation(true);
         setCurrentStep(1);
+    };
+
+    // Function to invite compatible users
+    const inviteCompatibleUsers = async (event: Event) => {
+        try {
+            const compatibleUsers = await fetchCompatibleUsers(
+                event.sportType,
+                "Intermediate",  // You may adjust this based on other criteria if needed
+                getDayOfWeek(event.date),
+                user?.uid || ''  // Exclude the event creator
+            );
+
+            for (const compatibleUser of compatibleUsers) {
+                const newEventInvite: EventInvite = {
+                    eventId: event.id,
+                    eventCreatorId: user?.uid || '',
+                    invitedUserId: compatibleUser.id,
+                    status: 'pending',
+                };
+
+                // Send the invite
+                await addEventInvite(newEventInvite);
+            }
+            console.log('Invites sent to compatible users');
+        } catch (error) {
+            console.error('Failed to invite compatible users:', error);
+        }
     };
 
     // Date and Time picker handlers

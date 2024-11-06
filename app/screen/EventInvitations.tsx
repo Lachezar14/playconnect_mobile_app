@@ -1,31 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {View, StyleSheet, Text, ScrollView} from 'react-native';
 import {useAuth} from "../context/AuthContext";
-import {fetchEventInvitesByUserId} from "../services/eventInviteService";
-import {EventInvite} from "../utilities/interfaces";
 import EventInvitationCard from "../components/event/EventInvitationCard";
 import {useEventInvites} from "../context/EventInvitesContext";
 
 const EventInvitations = () => {
     const { user } = useAuth();
     const { invitations } = useEventInvites();
-    // const [invitations, setInvitations] = useState<EventInvite[]>([]);
-    //
-    // const fetchInvitations = async () => {
-    //     if (!user) return;
-    //
-    //     try {
-    //         const invitations = await fetchEventInvitesByUserId(user.uid);
-    //         setInvitations(invitations);
-    //     }
-    //     catch (error) {
-    //         console.error("Error fetching event invitations: ", error);
-    //     }
-    // }
-    //
-    // useEffect(() => {
-    //     fetchInvitations();
-    // }, []);
 
     return (
         <View style={styles.container}>

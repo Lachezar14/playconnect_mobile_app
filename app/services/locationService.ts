@@ -8,23 +8,34 @@ export interface UserLocation {
     longitude: number;
 }
 
-export const getUserLocation = async (): Promise<UserLocation | null> => {
-    try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-            console.log('Permission to access location was denied');
-            return null;
-        }
+// Helper function to introduce a delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-        let location = await Location.getCurrentPositionAsync({});
-        return {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-        };
-    } catch (error) {
-        console.error("Error getting user location: ", error);
-        return null;
+// Retry logic for getting user location with permissions
+export const getUserLocation = async (maxRetries = 5): Promise<UserLocation | null> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                console.log(`Location permission denied (Attempt ${attempt}/${maxRetries})`);
+                if (attempt < maxRetries) await delay(3000); // Wait 3 seconds before retrying
+                continue;
+            }
+
+            // Try to get the location
+            const location = await Location.getCurrentPositionAsync({});
+            return {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+            };
+        } catch (error) {
+            console.error(`Error getting location on attempt ${attempt}:`, error);
+            if (attempt < maxRetries) await delay(3000); // Retry delay if an error occurs
+        }
     }
+
+    console.log('Failed to retrieve location after maximum retries');
+    return null;
 };
 
 // Function to check if the user has moved more than 1 kilometer from the stored location
