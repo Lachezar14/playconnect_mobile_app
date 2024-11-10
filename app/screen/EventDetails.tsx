@@ -7,7 +7,7 @@ import {
     ScrollView,
     TouchableOpacity,
     Alert,
-    RefreshControl,
+    RefreshControl, FlatList,
 } from 'react-native';
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +17,15 @@ import {fetchUserById, fetchUserStats} from "../services/userService";
 import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {SafeAreaView} from "react-native-safe-area-context";
-import CustomAlert from "../components/CustomAlert";
+import {UserParticipantDetails} from "../components/user/UserParticipantDetails";
+
+const participants2 = [
+    { firstName: "Peter", profilePictureUrl: "https://randomuser.me/api/portraits/men/32.jpg", rating: 3.5 },
+    { firstName: "John", profilePictureUrl: "https://randomuser.me/api/portraits/men/22.jpg", rating: 4.2 },
+    { firstName: "Sarah", profilePictureUrl: "https://randomuser.me/api/portraits/women/45.jpg", rating: 5.0 },
+    { firstName: "Emma", profilePictureUrl: "https://randomuser.me/api/portraits/women/32.jpg", rating: 4.7 },
+    { firstName: "Chris", profilePictureUrl: "https://randomuser.me/api/portraits/men/64.jpg", rating: 4.3 },
+];
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -209,10 +217,6 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
 
                     {/* Event Date and Description */}
                     <Text style={styles.eventDate}>{formattedTime} / {formattedDate}</Text>
-                    <Text style={styles.eventDescription}>
-                        Are you a padel enthusiast? Do you want to play but don't have a buddy? Fear not!
-                        Come to the SportsCentrum Arena and take part in one of the best padel tournaments.
-                    </Text>
 
                     {/* Location, Available Spots, and Sport Type */}
                     <View style={styles.infoContainer}>
@@ -222,8 +226,8 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                         </View>
                         <View style={styles.divider} />
                         <View style={styles.infoItem}>
-                            <MaterialCommunityIcons name="account-multiple" size={35} color="#4A9F89" />
-                            <Text style={styles.infoText}>{`${event.takenSpots || 0}/${event.spots}`}</Text>
+                            <MaterialCommunityIcons name="arm-flex" size={35} color="#4A9F89" />
+                            <Text style={styles.infoText}>{`${event.skillLevel}`}</Text>
                         </View>
                         <View style={styles.divider} />
                         <View style={styles.infoItem}>
@@ -233,6 +237,39 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                     </View>
                     {/* Address and button to open in Google Maps */}
                     <OpenGoogleMapsButton event={event} />
+
+                    {/* More Info Section */}
+                    <View style={styles.organizerContainer}>
+                        <Text style={styles.organizerTitle}>More Info</Text>
+                        <Text style={styles.eventDescription}>
+                            Are you a padel enthusiast? Do you want to play but don't have a buddy? Fear not!
+                            Come to the SportsCentrum Arena and take part in one of the best padel tournaments.
+                        </Text>
+                    </View>
+
+                    {/* Simple Divider */}
+                    <View style={styles.divider2} />
+
+                    {/* Participants Section */}
+                    <View style={styles.organizerContainer}>
+                        <Text style={styles.organizerTitle}>Participants</Text>
+
+                        {/* Use FlatList to render each participant */}
+                        <FlatList
+                            data={participants2}
+                            keyExtractor={(item) => item.firstName}
+                            renderItem={({ item }) => (
+                                <View>
+                                    <UserParticipantDetails firstName={item.firstName} profilePictureUrl={item.profilePictureUrl} rating={item.rating} />
+                                </View>
+                            )}
+                            horizontal={true} // For a horizontal list
+                            showsHorizontalScrollIndicator={false}
+                        />
+                    </View>
+
+                    {/* Simple Divider */}
+                    <View style={styles.divider2} />
 
                     {/* Organizer Details */}
                     <View style={styles.organizerContainer}>
@@ -248,6 +285,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                             </View>
                         </View>
                     </View>
+
                 </View>
             </ScrollView>
 
@@ -344,7 +382,6 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#000',
-        marginBottom: 5,
     },
     eventDate: {
         fontSize: 16,
@@ -361,6 +398,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 20,
+        marginTop: 10,
     },
     infoItem: {
         flex: 1,
@@ -502,7 +540,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
-
+    divider2: {
+        height: 1,
+        backgroundColor: '#E0E0E0',
+        marginBottom: 20,
+    },
 });
 
 export default EventDetails;

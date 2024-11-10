@@ -39,7 +39,7 @@ const UserInviteModal: React.FC<UserInviteModalProps> = ({ isVisible, onClose, e
             // Fetch nearby users
             //const users = await fetchNearbyUsers(event.latitude, event.longitude, event.sportType, currentUserId);
             // Fetch compatible users
-            const users = await fetchCompatibleUsers(event.sportType, "Intermediate", getDayOfWeek(event.date), currentUserId);
+            const users = await fetchCompatibleUsers(event.sportType, event.skillLevel, getDayOfWeek(event.date), currentUserId);
             setNearbyUsers(users);
             console.log('Nearby users loaded:', users);
 

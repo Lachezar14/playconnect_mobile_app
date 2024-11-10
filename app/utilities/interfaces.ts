@@ -6,6 +6,7 @@ export interface Event {
     longitude: number;
     postcode: string;
     sportType: string;
+    skillLevel: string;
     spots: number;
     street: string;
     streetNumber: string;
@@ -14,6 +15,7 @@ export interface Event {
     userId: string;
     distance?: string;  // Optional string for display
     distanceNum?: number; // Optional, actual number distance in meters
+    eventImage: string; // Image URL
 }
 
 export interface User {

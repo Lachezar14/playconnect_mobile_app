@@ -13,6 +13,13 @@ import {Event} from "../utilities/interfaces";
 import {fetchCompatibleUsers} from "../services/userService";
 import {getDayOfWeek} from "../utilities/getDayOfWeek";
 import {addEventInvite} from "../services/eventInviteService";
+import { Dropdown } from 'react-native-element-dropdown';
+
+const skillLevelOptions = [
+    { label: 'Beginner', value: 'beginner' },
+    { label: 'Intermediate', value: 'intermediate' },
+    { label: 'Advanced', value: 'advanced' },
+];
 
 
 const CreateEvent = () => {
@@ -29,6 +36,7 @@ const CreateEvent = () => {
     const [date, setDate] = useState<Date | undefined>(undefined);
     const [time, setTime] = useState<Date | undefined>(undefined);
     const [location, setLocation] = useState<Suggestion | null>(null);
+    const [skillLevel, setSkillLevel] = useState('');
     const [sportType, setSportType] = useState('');
     const [spots, setSpots] = useState('');
     const [shouldResetLocation, setShouldResetLocation] = useState(false);
@@ -57,8 +65,9 @@ const CreateEvent = () => {
         }
 
         try {
+            const eventImage = getSportImage(sportType);
             // Step 1: Create the event
-            const eventId = await createEvent(user?.uid || '', title, date, time, location, sportType, parseInt(spots));
+            const eventId = await createEvent(user?.uid || '', title, date, time, location, sportType, skillLevel, parseInt(spots), eventImage);
 
             if (eventId) {
                 // Step 2: Join the creator to the event automatically
@@ -87,6 +96,7 @@ const CreateEvent = () => {
         setTime(undefined);
         setLocation(null);
         setSportType('');
+        setSkillLevel('');
         setSpots('');
         setShouldResetLocation(true);
         setCurrentStep(1);
@@ -97,7 +107,7 @@ const CreateEvent = () => {
         try {
             const compatibleUsers = await fetchCompatibleUsers(
                 event.sportType,
-                "Intermediate",  // You may adjust this based on other criteria if needed
+                event.skillLevel,  // You may adjust this based on other criteria if needed
                 getDayOfWeek(event.date),
                 user?.uid || ''  // Exclude the event creator
             );
@@ -116,6 +126,22 @@ const CreateEvent = () => {
             console.log('Invites sent to compatible users');
         } catch (error) {
             console.error('Failed to invite compatible users:', error);
+        }
+    };
+
+    // Function to map the sport type to an image URL
+    const getSportImage = (sportType: string) => {
+        switch (sportType.toLowerCase()) {
+            case 'tennis':
+                return 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1976&q=80';
+            case 'padel':
+                return 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
+            case 'football':
+                return 'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80';
+            case 'basketball':
+                return 'https://images.unsplash.com/photo-1559692048-79a3f837883d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80';
+            default:
+                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
         }
     };
 
@@ -171,6 +197,20 @@ const CreateEvent = () => {
                             value={sportType}
                             onChangeText={setSportType}
                             placeholder="Enter sport type"
+                        />
+                        <Text style={styles.label}>Skill Level</Text>
+                        <Dropdown
+                            style={styles.dropdown}
+                            data={skillLevelOptions}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Select skill level"
+                            value={skillLevel}
+                            onChange={(item) => setSkillLevel(item.value)}
+                            containerStyle={styles.dropdownContainer}
+                            placeholderStyle={styles.placeholderStyle}
+                            selectedTextStyle={styles.selectedTextStyle}
+                            inputSearchStyle={styles.inputSearchStyle}
                         />
                         <Text style={styles.label}>Available Spots</Text>
                         <TextInput
@@ -312,5 +352,31 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 20,
+    },
+    dropdown: {
+        height: 50,
+        borderColor: '#E5E7EB',
+        borderWidth: 1,
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        marginBottom: 16,
+        backgroundColor: '#F9FAFB',
+    },
+    dropdownContainer: {
+        backgroundColor: '#F9FAFB',
+        borderRadius: 10,
+    },
+    placeholderStyle: {
+        fontSize: 16,
+        color: '#9CA3AF',
+    },
+    selectedTextStyle: {
+        fontSize: 16,
+        color: '#333',
+    },
+    inputSearchStyle: {
+        height: 40,
+        fontSize: 16,
+        color: '#333',
     },
 });

@@ -34,28 +34,13 @@ const EventCardSwipe: React.FC<EventCardProps> = ({ event }) => {
         }
     };
 
-    const getSportImage = (sport: string) => {
-        switch (sport.toLowerCase()) {
-            case 'tennis':
-                return 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1976&q=80';
-            case 'padel':
-                return 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
-            case 'football':
-                return 'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80';
-            case 'basketball':
-                return 'https://images.unsplash.com/photo-1559692048-79a3f837883d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80';
-            default:
-                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
-        }
-    };
-
     // Example usage
     const formattedDate = formatEventDate(eventDateTime);
 
     return (
         <View style={styles.cardContainer}>
             <ImageBackground
-                source={{ uri: getSportImage(event.sportType) }}
+                source={{ uri: event.eventImage }}
                 style={styles.card}
                 imageStyle={styles.imageStyle}
             >

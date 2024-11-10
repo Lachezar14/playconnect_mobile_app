@@ -231,7 +231,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 // Method to create an event and save to Firestore
-export const createEvent = async (userId: string, title: string, date: Date, time: Date, location: Suggestion, sportType: string, spots: number): Promise<string> => {
+export const createEvent = async (userId: string, title: string, date: Date, time: Date, location: Suggestion, sportType: string, skillLevel: string, spots: number, eventImage: string): Promise<string> => {
     // Combine date and time into a single Date object and convert to UTC
     const eventDateTime = moment(date)
         .set({
@@ -250,6 +250,7 @@ export const createEvent = async (userId: string, title: string, date: Date, tim
             title,
             date: formattedDateTimeUTC,
             sportType,
+            skillLevel,
             spots: parseInt(spots.toString(), 10),
             takenSpots: 0,
             street: location?.street,
@@ -258,6 +259,7 @@ export const createEvent = async (userId: string, title: string, date: Date, tim
             postcode: location?.postcode,
             latitude: Number(location?.latitude),
             longitude: Number(location?.longitude),
+            eventImage,
         });
 
         // Return the event ID

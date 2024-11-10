@@ -37,22 +37,6 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
     const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const formattedDate = eventDateTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-    // Function to map the sport type to an image URL
-    const getSportImage = (sport: string) => {
-        switch (sport.toLowerCase()) {
-            case 'tennis':
-                return 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?auto=format&fit=crop&w=1976&q=80';
-            case 'padel':
-                return 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?auto=format&fit=crop&w=2070&q=80';
-            case 'football':
-                return 'https://images.unsplash.com/photo-1553778263-73a83bab9b0c?auto=format&fit=crop&w=2071&q=80';
-            case 'basketball':
-                return 'https://images.unsplash.com/photo-1559692048-79a3f837883d?auto=format&fit=crop&w=1935&q=80';
-            default:
-                return 'https://plus.unsplash.com/premium_photo-1667935668767-8a75571d73bb?auto=format&fit=crop&w=2070&q=80';
-        }
-    };
-
     useEffect(() => {
         const checkIfLiked = async () => {
             if (user) {
@@ -100,7 +84,7 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
         <TouchableOpacity onPress={handleCardPress}>
             <View style={[styles.card, isEventInPast && styles.disabledCard]}>
                 <Image
-                    source={{ uri: getSportImage(event.sportType) }}
+                    source={{ uri: event.eventImage }}
                     style={[styles.image, isEventInPast && styles.greyedImage]}
                 />
                 {/* Icon button */}
