@@ -16,9 +16,9 @@ import {addEventInvite} from "../services/eventInviteService";
 import { Dropdown } from 'react-native-element-dropdown';
 
 const skillLevelOptions = [
-    { label: 'Beginner', value: 'beginner' },
-    { label: 'Intermediate', value: 'intermediate' },
-    { label: 'Advanced', value: 'advanced' },
+    { label: 'Beginner', value: 'Beginner' },
+    { label: 'Intermediate', value: 'Intermediate' },
+    { label: 'Advanced', value: 'Advanced' },
 ];
 
 
