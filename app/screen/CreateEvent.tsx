@@ -267,7 +267,7 @@ const CreateEvent = () => {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             {renderStep()}
 
             <View style={styles.buttonContainer}>
@@ -284,7 +284,7 @@ const CreateEvent = () => {
                 event={newEvent as Event}
                 currentUserId={user?.uid || ''}
             />
-        </ScrollView>
+        </View>
     );
 };
 

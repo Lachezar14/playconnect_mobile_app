@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { View, TextInput, FlatList, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 interface LocationInputProps {
@@ -20,6 +20,9 @@ interface Suggestion {
 const LocationInput: React.FC<LocationInputProps> = ({ setLocation, resetQuery, setShouldResetLocation }) => {
     const [query, setQuery] = useState<string>('');
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+
+    // Using useRef to store the timeout ID
+    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const fetchSuggestions = async (text: string) => {
         try {
@@ -46,8 +49,17 @@ const LocationInput: React.FC<LocationInputProps> = ({ setLocation, resetQuery, 
 
     const handleInputChange = (text: string) => {
         setQuery(text);
+
+        // Clear the previous timeout to prevent an API call before the user stops typing
+        if (debounceTimeout.current) {
+            clearTimeout(debounceTimeout.current);
+        }
+
         if (text.length > 2) {
-            fetchSuggestions(text);
+            // Set a new timeout to call the fetchSuggestions after 3000ms = 3s of inactivity
+            debounceTimeout.current = setTimeout(() => {
+                fetchSuggestions(text);
+            }, 3000);
         } else {
             setSuggestions([]);
         }
@@ -90,6 +102,8 @@ const LocationInput: React.FC<LocationInputProps> = ({ setLocation, resetQuery, 
                             <Text style={{ padding: 10 }}>{item.street} {item.streetNumber}, {item.city}, {item.postcode}</Text>
                         </TouchableOpacity>
                     )}
+                    keyboardShouldPersistTaps="handled"
+                    style={styles.suggestionList}
                 />
             )}
         </View>
@@ -106,6 +120,13 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         backgroundColor: '#F9FAFB',
         color: '#333',
+    },
+    suggestionList: {
+        maxHeight: 200,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 10,
+        borderColor: '#E5E7EB',
+        borderWidth: 1,
     },
 });
 
