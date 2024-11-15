@@ -44,32 +44,8 @@ const Profile = () => {
         }
     };
 
-    // const fetchUserRating = async () => {
-    //     if (!user) return;
-    //
-    //     try {
-    //         // Query the userStats collection to find the document where userId matches the user's UID
-    //         const userStatsRef = collection(FIRESTORE_DB, 'userStats');
-    //         const q = query(userStatsRef, where('userId', '==', user.uid));
-    //         const querySnapshot = await getDocs(q);
-    //
-    //         if (!querySnapshot.empty) {
-    //             const userStatsData = querySnapshot.docs[0].data();
-    //             setUserRating(userStatsData.userRating || null);  // Assuming userRating is stored in userStats
-    //         } else {
-    //             console.log('No user stats found');
-    //             setUserRating(null);
-    //         }
-    //     } catch (err) {
-    //         console.error('Error fetching user rating:', err);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
     useEffect(() => {
         fetchUserData();
-        //fetchUserRating();
     }, [user]); // Fetch user data when the user changes
 
     const renderStars = (rating: number | null) => {

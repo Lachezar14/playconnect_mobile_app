@@ -9,7 +9,7 @@ import {
     fetchParticipants,
     updateCheckInStatus
 } from "../services/eventParticipationService";
-import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
+import {Feather, FontAwesome, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {fetchUserById, fetchUserStats} from "../services/userService";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -306,12 +306,15 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                         <Text style={styles.organizerTitle}>Organizer</Text>
                         <View style={styles.organizerInfo}>
                             <Image
-                                source={{ uri: 'https://via.placeholder.com/50' }}
+                                source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }}
                                 style={styles.organizerImage}
                             />
                             <View style={styles.organizerDetails}>
                                 <Text style={styles.organizerName}>{eventCreator?.firstName} {eventCreator?.lastName}</Text>
-                                <Text style={styles.organizerRating}>User Rating: ⭐ {creatorStats?.userRating}/5</Text>
+                                <View style={styles.ratingContainer}>
+                                    <FontAwesome name="star" size={16} color="gold" />
+                                    <Text style={styles.rating}>{eventCreator?.userRating}</Text>
+                                </View>
                             </View>
                         </View>
                     </View>
@@ -636,6 +639,16 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         padding: 10,
         zIndex: 100,
+    },
+    ratingContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+    },
+    rating: {
+        marginLeft: 4,
+        fontSize: 15,
+        color: "#555",
     },
 });
 

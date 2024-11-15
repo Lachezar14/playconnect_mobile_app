@@ -11,10 +11,10 @@ import {
 } from 'react-native';
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import { useAuth } from '../context/AuthContext';
-import {Event, Participant, User, UserStats} from '../utilities/interfaces';
-import {eventLeave, eventJoin, checkIfJoined, fetchParticipants} from "../services/eventParticipationService";
-import {fetchUserById, fetchUserStats} from "../services/userService";
-import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
+import {Event, Participant, User} from '../utilities/interfaces';
+import {eventJoin, checkIfJoined, fetchParticipants} from "../services/eventParticipationService";
+import {fetchUserById} from "../services/userService";
+import {Feather, FontAwesome, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {UserParticipantDetails} from "../components/user/UserParticipantDetails";
@@ -44,11 +44,6 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [eventCreator, setEventCreator] = useState<User | null>(null);
     console.log('Event organizer:', eventCreator);
-    const [creatorStats, setCreatorStats] = useState<UserStats | null>(null);
-    console.log('Event organizer stats:', creatorStats);
-
-    //const [alert, setAlert] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' } | null>(null);
-
 
     const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
 
@@ -60,11 +55,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                 const creatorData = await fetchUserById(event.userId);
                 setEventCreator(creatorData);
 
-                // Fetch event creator stats
-                if (creatorData) {
-                    const creatorStatsData = await fetchUserStats(event.userId);
-                    setCreatorStats(creatorStatsData);
-                }
+                // // Fetch event creator stats
+                // if (creatorData) {
+                //     const creatorStatsData = await fetchUserStats(event.userId);
+                //     setCreatorStats(creatorStatsData);
+                // }
 
                 setLoading(false);
             } catch (error) {
@@ -235,7 +230,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
 
                     {/* Participants Section */}
                     <View style={styles.organizerContainer}>
-                        <Text style={styles.organizerTitle}>Participants</Text>
+                        <Text style={styles.organizerTitle}>Participants - {event.takenSpots}/{event.spots}</Text>
 
                         {/* Use FlatList to render each participant */}
                         <FlatList
@@ -259,12 +254,15 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                         <Text style={styles.organizerTitle}>Organizer</Text>
                         <View style={styles.organizerInfo}>
                             <Image
-                                source={{ uri: 'https://via.placeholder.com/50' }}
+                                source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }}
                                 style={styles.organizerImage}
                             />
                             <View style={styles.organizerDetails}>
                                 <Text style={styles.organizerName}>{eventCreator?.firstName} {eventCreator?.lastName}</Text>
-                                <Text style={styles.organizerRating}>User Rating: ⭐ {creatorStats?.userRating}/5</Text>
+                                <View style={styles.ratingContainer}>
+                                    <FontAwesome name="star" size={16} color="gold" />
+                                    <Text style={styles.rating}>{eventCreator?.userRating}</Text>
+                                </View>
                             </View>
                         </View>
                     </View>
@@ -527,6 +525,16 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#E0E0E0',
         marginBottom: 20,
+    },
+    ratingContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+    },
+    rating: {
+        marginLeft: 4,
+        fontSize: 15,
+        color: "#555",
     },
 });
 

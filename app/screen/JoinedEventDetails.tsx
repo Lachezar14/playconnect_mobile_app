@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, FlatList} from 'react-native';
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useAuth } from '../context/AuthContext';
 import {User, Event, Participant, UserStats} from '../utilities/interfaces';
@@ -10,10 +10,11 @@ import {
     fetchParticipants,
     updateCheckInStatus
 } from "../services/eventParticipationService";
-import {Feather, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
+import {Feather, FontAwesome, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {fetchUserById, fetchUserStats} from "../services/userService";
 import {SafeAreaView} from "react-native-safe-area-context";
+import {UserParticipantDetails} from "../components/user/UserParticipantDetails";
 
 // Define the types for the route params
 type RootStackParamList = {
@@ -22,6 +23,14 @@ type RootStackParamList = {
 
 // Define props using NativeStackScreenProps
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinedEventsDetails'>;
+
+const participants2 = [
+    { firstName: "Peter", profilePictureUrl: "https://randomuser.me/api/portraits/men/32.jpg", rating: 3.5 },
+    { firstName: "John", profilePictureUrl: "https://randomuser.me/api/portraits/men/22.jpg", rating: 4.2 },
+    { firstName: "Sarah", profilePictureUrl: "https://randomuser.me/api/portraits/women/45.jpg", rating: 5.0 },
+    { firstName: "Emma", profilePictureUrl: "https://randomuser.me/api/portraits/women/32.jpg", rating: 4.7 },
+    { firstName: "Chris", profilePictureUrl: "https://randomuser.me/api/portraits/men/64.jpg", rating: 4.3 },
+];
 
 const JoinedEventDetails: React.FC<Props> = ({ route, navigation }) => {
     const { user } = useAuth();
@@ -248,6 +257,19 @@ const JoinedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                     {/* Participants Section */}
                     <View style={styles.organizerContainer}>
                         <Text style={styles.organizerTitle}>Participants</Text>
+
+                        {/* Use FlatList to render each participant */}
+                        <FlatList
+                            data={participants2}
+                            keyExtractor={(item) => item.firstName}
+                            renderItem={({ item }) => (
+                                <View>
+                                    <UserParticipantDetails firstName={item.firstName} profilePictureUrl={item.profilePictureUrl} rating={item.rating} />
+                                </View>
+                            )}
+                            horizontal={true} // For a horizontal list
+                            showsHorizontalScrollIndicator={false}
+                        />
                     </View>
 
                     {/* Simple Divider */}
@@ -258,12 +280,15 @@ const JoinedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                         <Text style={styles.organizerTitle}>Organizer</Text>
                         <View style={styles.organizerInfo}>
                             <Image
-                                source={{ uri: 'https://via.placeholder.com/50' }}
+                                source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }}
                                 style={styles.organizerImage}
                             />
                             <View style={styles.organizerDetails}>
                                 <Text style={styles.organizerName}>{eventCreator?.firstName} {eventCreator?.lastName}</Text>
-                                <Text style={styles.organizerRating}>User Rating: ⭐ {creatorStats?.userRating}/5</Text>
+                                <View style={styles.ratingContainer}>
+                                    <FontAwesome name="star" size={16} color="gold" />
+                                    <Text style={styles.rating}>{eventCreator?.userRating}</Text>
+                                </View>
                             </View>
                         </View>
                     </View>
@@ -580,6 +605,16 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         padding: 10,
         zIndex: 100,
+    },
+    ratingContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+    },
+    rating: {
+        marginLeft: 4,
+        fontSize: 15,
+        color: "#555",
     },
 });
 
