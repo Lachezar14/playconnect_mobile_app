@@ -1,21 +1,21 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
-import {Feather, FontAwesome} from "@expo/vector-icons";
+import {FontAwesome} from "@expo/vector-icons";
 
 interface UserParticipantDetailsProps {
     firstName: string;
-    profilePictureUrl: string;
+    //profilePictureUrl: string;
     rating: number;
 }
 
-export const UserParticipantDetails: React.FC<UserParticipantDetailsProps> = ({firstName, profilePictureUrl, rating}) => {
+export const UserParticipantDetails: React.FC<UserParticipantDetailsProps> = ({firstName, rating}) => {
     return (
         <View style={styles.container}>
-            <Image source={{ uri: profilePictureUrl }} style={styles.profilePicture} />
+            <Image source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }} style={styles.profilePicture} />
             <Text style={styles.firstName}>{firstName}</Text>
             <View style={styles.ratingContainer}>
                 <FontAwesome name="star" size={16} color="gold" />
-                <Text style={styles.rating}>{rating.toFixed(1)}</Text>
+                <Text style={styles.rating}>{rating}</Text>
             </View>
         </View>
     );

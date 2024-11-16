@@ -24,7 +24,7 @@ export const fetchParticipants = async (eventId: string): Promise<Participant[]>
 
         if (!userSnapshot.empty) {
             const userData = userSnapshot.docs[0].data();
-            return { id: userId, firstName: userData.firstName, lastName: userData.lastName };
+            return { id: userId, firstName: userData.firstName, lastName: userData.lastName, userRating: userData.userRating } as Participant;
         }
         return null;
     });

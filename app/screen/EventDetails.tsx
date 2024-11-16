@@ -19,14 +19,6 @@ import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {UserParticipantDetails} from "../components/user/UserParticipantDetails";
 
-const participants2 = [
-    { firstName: "Peter", profilePictureUrl: "https://randomuser.me/api/portraits/men/32.jpg", rating: 3.5 },
-    { firstName: "John", profilePictureUrl: "https://randomuser.me/api/portraits/men/22.jpg", rating: 4.2 },
-    { firstName: "Sarah", profilePictureUrl: "https://randomuser.me/api/portraits/women/45.jpg", rating: 5.0 },
-    { firstName: "Emma", profilePictureUrl: "https://randomuser.me/api/portraits/women/32.jpg", rating: 4.7 },
-    { firstName: "Chris", profilePictureUrl: "https://randomuser.me/api/portraits/men/64.jpg", rating: 4.3 },
-];
-
 // Define the types for the route params
 type RootStackParamList = {
     EventDetails: { event: Event }; // Replace 'any' with the appropriate type for event
@@ -234,11 +226,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
 
                         {/* Use FlatList to render each participant */}
                         <FlatList
-                            data={participants2}
+                            data={participants}
                             keyExtractor={(item) => item.firstName}
                             renderItem={({ item }) => (
                                 <View>
-                                    <UserParticipantDetails firstName={item.firstName} profilePictureUrl={item.profilePictureUrl} rating={item.rating} />
+                                    <UserParticipantDetails firstName={item.firstName} rating={item.userRating} />
                                 </View>
                             )}
                             horizontal={true} // For a horizontal list
