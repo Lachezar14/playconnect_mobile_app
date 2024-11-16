@@ -31,6 +31,7 @@ export interface User {
     userRating: number;
     skillLevel: string;
     availability: string[];
+    profilePicture: string;
 }
 
 export interface EventParticipant {
@@ -56,6 +57,7 @@ export interface Participant {
     firstName: string;
     lastName: string;
     userRating: number;
+    profilePicture: string;
 }
 
 export interface Suggestion {

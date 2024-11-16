@@ -39,6 +39,17 @@ const Onboarding = ({ route, navigation }) => {
 
     const savePreferences = async () => {
         try {
+            const profilePictures = [
+                "https://randomuser.me/api/portraits/men/32.jpg",
+                "https://randomuser.me/api/portraits/men/22.jpg",
+                "https://randomuser.me/api/portraits/men/45.jpg",
+                "https://randomuser.me/api/portraits/men/32.jpg",
+                "https://randomuser.me/api/portraits/men/64.jpg"
+            ];
+
+            // Select a random profile picture
+            const randomProfilePicture = profilePictures[Math.floor(Math.random() * profilePictures.length)];
+
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
 
@@ -54,6 +65,7 @@ const Onboarding = ({ route, navigation }) => {
                     skillLevel: selectedSkill,
                     userRating: 3,
                     isAvailable: true,
+                    profilePicture: randomProfilePicture
                 });
             });
             console.log(selectedSport, selectedDays, selectedSkill);

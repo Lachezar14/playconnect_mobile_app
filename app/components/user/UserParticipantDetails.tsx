@@ -4,14 +4,14 @@ import {FontAwesome} from "@expo/vector-icons";
 
 interface UserParticipantDetailsProps {
     firstName: string;
-    //profilePictureUrl: string;
+    profilePicture: string;
     rating: number;
 }
 
-export const UserParticipantDetails: React.FC<UserParticipantDetailsProps> = ({firstName, rating}) => {
+export const UserParticipantDetails: React.FC<UserParticipantDetailsProps> = ({firstName, rating, profilePicture}) => {
     return (
         <View style={styles.container}>
-            <Image source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }} style={styles.profilePicture} />
+            <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
             <Text style={styles.firstName}>{firstName}</Text>
             <View style={styles.ratingContainer}>
                 <FontAwesome name="star" size={16} color="gold" />

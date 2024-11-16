@@ -80,7 +80,7 @@ const Profile = () => {
             {/* Profile Image */}
             <Image
                 style={styles.profileImage}
-                source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }} // Example image, replace with actual user image
+                source={{ uri: userData?.profilePicture }} // Example image, replace with actual user image
             />
 
             {/* Profile Info */}

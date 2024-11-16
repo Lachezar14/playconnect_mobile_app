@@ -126,7 +126,7 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId
             <View style={styles.inviterContainer}>
                 <Image
                     style={styles.profileImage}
-                    source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+                    source={{ uri: creator?.profilePicture }}
                 />
                 <Text style={styles.inviterName}>{creator?.firstName} {creator?.lastName}</Text>
             </View>

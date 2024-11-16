@@ -230,7 +230,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                             keyExtractor={(item) => item.firstName}
                             renderItem={({ item }) => (
                                 <View>
-                                    <UserParticipantDetails firstName={item.firstName} rating={item.userRating} />
+                                    <UserParticipantDetails firstName={item.firstName} rating={item.userRating} profilePicture={item.profilePicture} />
                                 </View>
                             )}
                             horizontal={true} // For a horizontal list
@@ -246,7 +246,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                         <Text style={styles.organizerTitle}>Organizer</Text>
                         <View style={styles.organizerInfo}>
                             <Image
-                                source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }}
+                                source={{ uri: eventCreator?.profilePicture }}
                                 style={styles.organizerImage}
                             />
                             <View style={styles.organizerDetails}>

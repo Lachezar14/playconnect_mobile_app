@@ -17,14 +17,6 @@ import UserInviteModal from "../modal/UserInviteModal";
 import {deleteEventById} from "../services/eventService";
 import {UserParticipantDetails} from "../components/user/UserParticipantDetails";
 
-// const participants2 = [
-//     { firstName: "Peter", profilePictureUrl: "https://randomuser.me/api/portraits/men/32.jpg", rating: 3.5 },
-//     { firstName: "John", profilePictureUrl: "https://randomuser.me/api/portraits/men/22.jpg", rating: 4.2 },
-//     { firstName: "Sarah", profilePictureUrl: "https://randomuser.me/api/portraits/women/45.jpg", rating: 5.0 },
-//     { firstName: "Emma", profilePictureUrl: "https://randomuser.me/api/portraits/women/32.jpg", rating: 4.7 },
-//     { firstName: "Chris", profilePictureUrl: "https://randomuser.me/api/portraits/men/64.jpg", rating: 4.3 },
-// ];
-
 // Define the types for the route params
 type RootStackParamList = {
     JoinedEventsDetails: { event: Event };
@@ -290,7 +282,7 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                             keyExtractor={(item) => item.firstName}
                             renderItem={({ item }) => (
                                 <View>
-                                    <UserParticipantDetails firstName={item.firstName} rating={item.userRating} />
+                                    <UserParticipantDetails firstName={item.firstName} rating={item.userRating} profilePicture={item.profilePicture} />
                                 </View>
                             )}
                             horizontal={true} // For a horizontal list
@@ -306,7 +298,7 @@ const CreatedEventDetails: React.FC<Props> = ({ route, navigation }) => {
                         <Text style={styles.organizerTitle}>Organizer</Text>
                         <View style={styles.organizerInfo}>
                             <Image
-                                source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }}
+                                source={{ uri: eventCreator?.profilePicture }}
                                 style={styles.organizerImage}
                             />
                             <View style={styles.organizerDetails}>

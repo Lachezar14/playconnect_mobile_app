@@ -19,7 +19,7 @@ const UserInviteCard: React.FC<UserInviteProps> = ({ profilePicture, firstName, 
 
     return (
         <View style={styles.card}>
-            <Image source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }} style={styles.image} />
+            <Image source={{ uri: profilePicture }} style={styles.image} />
 
             <View style={styles.textContainer}>
                 <Text style={styles.name}>{`${firstName} ${lastName}`}</Text>
