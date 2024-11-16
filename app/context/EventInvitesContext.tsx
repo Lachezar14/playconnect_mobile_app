@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import {useAuth} from "./AuthContext";
 import {EventInvite} from "../utilities/interfaces";
 import {fetchEventInvitesByUserId} from "../services/eventInviteService";
+import {onSnapshot, collection, query, where} from "firebase/firestore";
+import {FIRESTORE_DB} from "../../firebaseConfig";
 
 interface EventInvitesContextType {
     invitations: EventInvite[];
@@ -22,14 +24,36 @@ export const EventInvitesProvider: React.FC<EventInvitesProviderProps> = ({ chil
     const [invitationCount, setInvitationCount] = useState<number>(0);
 
     useEffect(() => {
+        let unsubscribe: (() => void) | undefined;
+
         const fetchInvites = async () => {
             if (user?.uid) {
                 try {
+                    // Fetch initial data
                     const fetchedInvites = await fetchEventInvitesByUserId(user.uid);
-                    const pendingInvites = fetchedInvites.filter(invite => invite.status === 'pending');
-
+                    // Filter out pending invites
+                    const pendingInvites = fetchedInvites.filter((invite) => invite.status === "pending");
                     setInvitations(fetchedInvites);
                     setInvitationCount(pendingInvites.length);
+
+                    // Setup real-time listener
+                    const invitesQuery = query(
+                        collection(FIRESTORE_DB, "eventInvites"),
+                        where("invitedUserId", "==", user.uid)
+                    );
+
+                    // Listen for changes to the event invites collection
+                    unsubscribe = onSnapshot(invitesQuery, (snapshot) => {
+                        const fetchedInvites = snapshot.docs.map((doc) => ({
+                            id: doc.id,
+                            ...doc.data(),
+                        })) as EventInvite[];
+
+                        // Filter out pending invites
+                        const pendingInvites = fetchedInvites.filter((invite) => invite.status === "pending");
+                        setInvitations(fetchedInvites);
+                        setInvitationCount(pendingInvites.length);
+                    });
                 } catch (error) {
                     console.error("Error fetching event invites:", error);
                 }
@@ -37,7 +61,15 @@ export const EventInvitesProvider: React.FC<EventInvitesProviderProps> = ({ chil
         };
 
         fetchInvites();
+
+        // Cleanup listener
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
     }, [user?.uid]);
+
 
     return (
         <EventInvitesContext.Provider value={{ invitations, invitationCount }}>
