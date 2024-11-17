@@ -83,6 +83,7 @@ export default function MainTabNavigator() {
                 component={InvitationsStack}
                 options={{
                     title: 'Invitations',
+                    headerShown: false,
                     tabBarIcon: ({ color, size }) => (
                         <View>
                             <MaterialCommunityIcons name='inbox-full' size={size} color={color} />

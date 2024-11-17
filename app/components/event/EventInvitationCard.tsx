@@ -1,12 +1,13 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
 import {Feather} from "@expo/vector-icons";
-import {User, Event, EventInvite} from "../../utilities/interfaces";
+import {User, Event} from "../../utilities/interfaces";
 import {fetchUserById} from "../../services/userService";
 import {fetchEventById} from "../../services/eventService";
 import {useNavigation} from "@react-navigation/native";
-import {acceptEventInvite, declineEventInvite, fetchEventInviteById} from "../../services/eventInviteService";
+import {acceptEventInvite, declineEventInvite} from "../../services/eventInviteService";
 import {useAuth} from "../../context/AuthContext";
+import {useEventInvites} from "../../context/EventInvitesContext";
 
 // Define the types for the props
 interface EventInvitationCardProps {
@@ -17,21 +18,15 @@ interface EventInvitationCardProps {
 
 const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId ,eventId, creatorId }) => {
     const { user } = useAuth();
-    const [eventInvite, setEventInvite] = useState<EventInvite | null>(null);
+    const { invitations } = useEventInvites(); // Get invitations from context
     const [event, setEvent] = useState<Event | null>(null);
     const [creator, setCreator] = useState<User | null>(null);
     const navigation = useNavigation();
 
-    const fetchEventInvite = async () => {
-        if (!eventInviteId) return;
-
-        try {
-            const eventInviteData = await fetchEventInviteById(eventInviteId);
-            setEventInvite(eventInviteData);
-        } catch (error) {
-            console.error("Error fetching event invite details: ", error);
-        }
-    }
+    // Get the current invite from the context instead of fetching it
+    const eventInvite = useMemo(() => {
+        return invitations.find(invite => invite.id === eventInviteId) || null;
+    }, [invitations, eventInviteId]);
 
     const fetchEvent = async () => {
         if (!eventId) return;
@@ -56,17 +51,18 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId
     };
 
     const handleNavigateToEvent = () => {
-        navigation.navigate('EventDetails', { event });
+        // @ts-ignore
+        navigation.navigate('InvitedEventDetails', { event, eventInvite });
     };
 
     const handleNavigateToJoinedEvent = () => {
+        // @ts-ignore
         navigation.navigate('MyEventsStack', { screen: 'JoinedEventDetails', params: { event } });
     }
 
     const handleDecline = async () => {
         try {
             await declineEventInvite(eventInviteId);
-            setEventInvite({ ...eventInvite, status: 'declined' });
         } catch (error) {
             console.error("Error declining event invite: ", error);
         }
@@ -75,14 +71,12 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId
     const handleAccept = async () => {
         try {
             await acceptEventInvite(eventInviteId, eventId, user?.uid || '');
-            setEventInvite({ ...eventInvite, status: 'accepted' });
         } catch (error) {
             console.error("Error accepting event invite: ", error);
         }
     }
 
     useEffect(() => {
-        fetchEventInvite();
         fetchEvent();
         fetchCreator();
     }, [eventInviteId ,eventId, creatorId]);

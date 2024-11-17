@@ -1,12 +1,12 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
-import EventDetails from "../../screen/eventFeed/EventDetails";
 import EventInvitations from "../../screen/invitations/EventInvitations";
+import InvitedEventDetails from "../../screen/invitations/InvitedEventDetails";
 
 export type InvitationsStackParamList = {
     EventInvitations: undefined;
-    EventDetails: { event: any }; // Replace 'any' with a more specific type if available
+    InvitedEventDetails: { event: any }; // Replace 'any' with a more specific type if available
 };
 
 const Stack = createNativeStackNavigator<InvitationsStackParamList>();
@@ -14,7 +14,7 @@ const Stack = createNativeStackNavigator<InvitationsStackParamList>();
 export default function InvitationsStack({navigation, route}: any) {
     React.useLayoutEffect(() => {
         const routeName = getFocusedRouteNameFromRoute(route);
-        if (routeName === "EventDetails") {
+        if (routeName === "InvitedEventDetails") {
             navigation.setOptions({tabBarStyle: {display: 'none'}});
         }else {
             navigation.setOptions({tabBarStyle: {display: 'flex'}});
@@ -26,11 +26,11 @@ export default function InvitationsStack({navigation, route}: any) {
             <Stack.Screen
                 name="EventInvitations"
                 component={EventInvitations}
-                options={{ title: 'Events', headerShown: false }}
+                options={{ title: 'Invitations' }}
             />
             <Stack.Screen
-                name="EventDetails"
-                component={EventDetails}
+                name="InvitedEventDetails"
+                component={InvitedEventDetails}
                 options={{ title: 'Event Details', headerShown: false }}
             />
         </Stack.Navigator>

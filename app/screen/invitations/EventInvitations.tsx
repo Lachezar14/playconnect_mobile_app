@@ -8,6 +8,11 @@ const EventInvitations = () => {
     const { user } = useAuth();
     const { invitations } = useEventInvites();
 
+    // Add effect to log updates
+    useEffect(() => {
+        console.log('Invitations updated in component:', invitations);
+    }, [invitations]);
+
     return (
         <View style={styles.container}>
             <ScrollView>

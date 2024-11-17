@@ -6,18 +6,19 @@ import {fetchEventInvitesByUserId} from "../services/eventInviteService";
 import {onSnapshot, collection, query, where} from "firebase/firestore";
 import {FIRESTORE_DB} from "../../firebaseConfig";
 
+// Define the context type
 interface EventInvitesContextType {
     invitations: EventInvite[];
     invitationCount: number;
 }
 
-// Create the context with an initial value of undefined
 const EventInvitesContext = createContext<EventInvitesContextType | undefined>(undefined);
 
 interface EventInvitesProviderProps {
     children: ReactNode;
 }
 
+// Create the context with an initial value of undefined
 export const EventInvitesProvider: React.FC<EventInvitesProviderProps> = ({ children }) => {
     const { user } = useAuth();
     const [invitations, setInvitations] = useState<EventInvite[]>([]);
@@ -26,43 +27,43 @@ export const EventInvitesProvider: React.FC<EventInvitesProviderProps> = ({ chil
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
 
-        const fetchInvites = async () => {
-            if (user?.uid) {
-                try {
-                    // Fetch initial data
-                    const fetchedInvites = await fetchEventInvitesByUserId(user.uid);
-                    // Filter out pending invites
-                    const pendingInvites = fetchedInvites.filter((invite) => invite.status === "pending");
-                    setInvitations(fetchedInvites);
-                    setInvitationCount(pendingInvites.length);
+        const setupInvitesListener = async () => {
+            if (!user?.uid) return;
 
-                    // Setup real-time listener
-                    const invitesQuery = query(
-                        collection(FIRESTORE_DB, "eventInvites"),
-                        where("invitedUserId", "==", user.uid)
-                    );
+            try {
+                // Setup real-time listener
+                const invitesQuery = query(
+                    collection(FIRESTORE_DB, "eventInvites"),
+                    where("invitedUserId", "==", user.uid)
+                );
 
-                    // Listen for changes to the event invites collection
-                    unsubscribe = onSnapshot(invitesQuery, (snapshot) => {
-                        const fetchedInvites = snapshot.docs.map((doc) => ({
+                unsubscribe = onSnapshot(invitesQuery, (snapshot) => {
+                    const updatedInvites: EventInvite[] = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
                             id: doc.id,
-                            ...doc.data(),
-                        })) as EventInvite[];
-
-                        // Filter out pending invites
-                        const pendingInvites = fetchedInvites.filter((invite) => invite.status === "pending");
-                        setInvitations(fetchedInvites);
-                        setInvitationCount(pendingInvites.length);
+                            eventId: data.eventId,
+                            eventCreatorId: data.eventCreatorId,
+                            invitedUserId: data.invitedUserId,
+                            status: data.status,
+                            createdAt: data.createdAt,
+                        };
                     });
-                } catch (error) {
-                    console.error("Error fetching event invites:", error);
-                }
+
+                    // Sort invites
+                    const sortedInvites = sortInvites(updatedInvites);
+
+                    // Force a new array reference and ensure all properties are enumerated
+                    setInvitations([...sortedInvites]);
+                    setInvitationCount(sortedInvites.filter(invite => invite.status === 'pending').length);
+                });
+            } catch (error) {
+                console.error("Error setting up event invites listener:", error);
             }
         };
 
-        fetchInvites();
+        setupInvitesListener();
 
-        // Cleanup listener
         return () => {
             if (unsubscribe) {
                 unsubscribe();
@@ -70,6 +71,15 @@ export const EventInvitesProvider: React.FC<EventInvitesProviderProps> = ({ chil
         };
     }, [user?.uid]);
 
+    const sortInvites = (invites: EventInvite[]): EventInvite[] => {
+        return [...invites].sort((a, b) => {
+            // Sort by status (pending first)
+            if (a.status === 'pending' && b.status !== 'pending') return -1;
+            if (a.status !== 'pending' && b.status === 'pending') return 1;
+            // Then sort by date created (newest first)
+            return b.invitedAt.toMillis() - a.invitedAt.toMillis();
+        });
+    };
 
     return (
         <EventInvitesContext.Provider value={{ invitations, invitationCount }}>
@@ -86,3 +96,5 @@ export const useEventInvites = (): EventInvitesContextType => {
     }
     return context;
 };
+
+export type { EventInvite, EventInvitesContextType };
