@@ -28,7 +28,12 @@ const LocationInput: React.FC<LocationInputProps> = ({ setLocation, resetQuery, 
         try {
             // Limited to the Netherlands, remove countrycodes=nl to search globally
             const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&countrycodes=nl&format=json&addressdetails=1&limit=5`
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&countrycodes=nl&format=json&addressdetails=1&limit=5`,
+                {
+                    headers: {
+                        'User-Agent': 'Playconnect/1.1 (lachezar@gmail.com)', // Replace with your app name and email
+                    },
+                }
             );
             const data = await response.json();
             const formattedSuggestions = data.map((place: any) => ({
