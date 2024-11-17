@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Events from '../../screen/Events';
-import EventDetails from '../../screen/EventDetails';
+import Events from '../../screen/eventFeed/Events';
+import EventDetails from '../../screen/eventFeed/EventDetails';
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
 
 export type EventStackParamList = {

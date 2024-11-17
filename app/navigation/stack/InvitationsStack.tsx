@@ -1,8 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
-import EventDetails from "../../screen/EventDetails";
-import EventInvitations from "../../screen/EventInvitations";
+import EventDetails from "../../screen/eventFeed/EventDetails";
+import EventInvitations from "../../screen/invitations/EventInvitations";
 
 export type InvitationsStackParamList = {
     EventInvitations: undefined;

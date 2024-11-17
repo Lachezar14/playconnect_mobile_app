@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { MaterialIcons } from "@expo/vector-icons";
 import CheckBox from 'react-native-check-box';
-import { useAuth } from "../context/AuthContext";
-import { fetchUserById, updateUserPreferences } from "../services/userService";
+import { useAuth } from "../../context/AuthContext";
+import { fetchUserById, updateUserPreferences } from "../../services/userService";
 
 const UserPreferences = () => {
     // List of sports to choose from

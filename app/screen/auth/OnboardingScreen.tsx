@@ -3,7 +3,7 @@ import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from "@expo/vector-icons";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebaseConfig";
 import { doc, runTransaction } from "firebase/firestore";
 import {CommonActions} from "@react-navigation/native";
 

@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext';
-import {FIREBASE_AUTH, FIRESTORE_DB} from "../../firebaseConfig";
+import { useAuth } from '../../context/AuthContext';
+import {FIREBASE_AUTH, FIRESTORE_DB} from "../../../firebaseConfig";
 import { useNavigation, NavigationProp } from '@react-navigation/native';  // Import NavigationProp for typing
-import { ProfileStackParamList } from '../navigation/stack/ProfileStack';
+import { ProfileStackParamList } from '../../navigation/stack/ProfileStack';
 import { doc, getDoc} from "firebase/firestore";
-import {User} from "../utilities/interfaces";
+import {User} from "../../utilities/interfaces";
 
 // Correctly type the navigation object
 type ProfileScreenNavigationProp = NavigationProp<ProfileStackParamList, 'Profile'>;

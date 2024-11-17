@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {View, StyleSheet, Text, ScrollView} from 'react-native';
-import {useAuth} from "../context/AuthContext";
-import EventInvitationCard from "../components/event/EventInvitationCard";
-import {useEventInvites} from "../context/EventInvitesContext";
+import {useAuth} from "../../context/AuthContext";
+import EventInvitationCard from "../../components/event/EventInvitationCard";
+import {useEventInvites} from "../../context/EventInvitesContext";
 
 const EventInvitations = () => {
     const { user } = useAuth();

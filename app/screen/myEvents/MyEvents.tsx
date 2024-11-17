@@ -1,15 +1,15 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {ScrollView, View, Text, StyleSheet, RefreshControl, TouchableOpacity} from 'react-native';
-import EventCardSmall from "../components/event/EventCardSmall";
-import {getUserLocation} from "../services/locationService";
+import EventCardSmall from "../../components/event/EventCardSmall";
+import {getUserLocation} from "../../services/locationService";
 import {
     addDistanceToEvents,
     fetchEventsCreatedByUser,
     fetchEventsJoinedByUserID,
     fetchEventsLikedByUser
-} from "../services/eventService";
-import {useAuth} from "../context/AuthContext";
-import {Event} from "../utilities/interfaces";
+} from "../../services/eventService";
+import {useAuth} from "../../context/AuthContext";
+import {Event} from "../../utilities/interfaces";
 import {useFocusEffect} from "@react-navigation/native";
 import {Feather} from "@expo/vector-icons";
 

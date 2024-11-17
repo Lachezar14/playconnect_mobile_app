@@ -1,11 +1,11 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {View, StyleSheet, RefreshControl, Animated} from 'react-native';
-import EventCard from "../components/event/EventCard";
-import SearchFilter from "../components/filters/SearchFilter";
-import SportFilter from "../components/filters/SportFilter";
-import {addDistanceToEvents, fetchEvents} from "../services/eventService";
-import {getUserLocation} from "../services/locationService";
-import {Event} from "../utilities/interfaces";
+import EventCard from "../../components/event/EventCard";
+import SearchFilter from "../../components/filters/SearchFilter";
+import SportFilter from "../../components/filters/SportFilter";
+import {addDistanceToEvents, fetchEvents} from "../../services/eventService";
+import {getUserLocation} from "../../services/locationService";
+import {Event} from "../../utilities/interfaces";
 
 const HEADER_MAX_HEIGHT = 130; // Adjust this value based on your SearchFilter height
 const HEADER_MIN_HEIGHT = 0;

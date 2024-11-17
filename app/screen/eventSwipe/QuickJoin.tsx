@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {View, StyleSheet, TouchableOpacity, Text, Alert} from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-import EventCardSwipe from "../components/event/EventCardSwipe";
+import EventCardSwipe from "../../components/event/EventCardSwipe";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FilterModal from '../components/filters/FilterModal';
+import FilterModal from '../../components/filters/FilterModal';
 import { Feather } from "@expo/vector-icons";
-import {getUserLocation} from "../services/locationService";
-import {addDistanceToEvents, fetchUpcomingEventsNotJoinedByUser} from "../services/eventService";
-import { Event } from '../utilities/interfaces';
-import {eventJoin} from "../services/eventParticipationService";
-import {useAuth} from "../context/AuthContext";
-import CustomAlert from "../components/CustomAlert";
+import {getUserLocation} from "../../services/locationService";
+import {addDistanceToEvents, fetchUpcomingEventsNotJoinedByUser} from "../../services/eventService";
+import { Event } from '../../utilities/interfaces';
+import {eventJoin} from "../../services/eventParticipationService";
+import {useAuth} from "../../context/AuthContext";
+import CustomAlert from "../../components/CustomAlert";
 
 const defaultFilters = { sport: 'All', maxDistance: 50 };
 

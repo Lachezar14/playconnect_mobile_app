@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, FlatList} from 'react-native';
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useAuth } from '../context/AuthContext';
-import {User, Event, Participant, UserStats} from '../utilities/interfaces';
+import { useAuth } from '../../context/AuthContext';
+import {User, Event, Participant, UserStats} from '../../utilities/interfaces';
 import {
     checkIfCheckedIn,
     checkIfJoined,
     fetchParticipants,
     updateCheckInStatus
-} from "../services/eventParticipationService";
+} from "../../services/eventParticipationService";
 import {Feather, FontAwesome, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
-import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
-import {fetchUserById, fetchUserStats} from "../services/userService";
+import OpenGoogleMapsButton from "../../components/OpenGoogleMapsButton";
+import {fetchUserById, fetchUserStats} from "../../services/userService";
 import {SafeAreaView} from "react-native-safe-area-context";
-import UserInviteModal from "../modal/UserInviteModal";
-import {deleteEventById} from "../services/eventService";
-import {UserParticipantDetails} from "../components/user/UserParticipantDetails";
+import UserInviteModal from "../../modal/UserInviteModal";
+import {deleteEventById} from "../../services/eventService";
+import {UserParticipantDetails} from "../../components/user/UserParticipantDetails";
 
 // Define the types for the route params
 type RootStackParamList = {

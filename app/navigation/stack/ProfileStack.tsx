@@ -1,8 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Profile from '../../screen/Profile';
-import EventInvitations from "../../screen/EventInvitations";
-import UserPreferences from "../../screen/UserPreferences";
+import Profile from '../../screen/profile/Profile';
+import UserPreferences from "../../screen/profile/UserPreferences";
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
 
 export type ProfileStackParamList = {

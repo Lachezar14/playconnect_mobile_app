@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, TextInput, ActivityIndicator, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import React, { useState } from 'react';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { FIREBASE_AUTH } from '../../../firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AuthStackParamList } from '../utilities/AuthStackParamList'; // Define your navigation types
+import { AuthStackParamList } from '../../utilities/AuthStackParamList'; // Define your navigation types
 import { FontAwesome } from '@expo/vector-icons';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;

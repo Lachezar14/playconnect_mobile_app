@@ -1,11 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import MyEvents from '../../screen/MyEvents';
-import JoinedEventDetails from '../../screen/JoinedEventDetails';
+import MyEvents from '../../screen/myEvents/MyEvents';
+import JoinedEventDetails from '../../screen/myEvents/JoinedEventDetails';
 import React from 'react';
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";
-import CreateEvent from "../../screen/CreateEvent";
-import CreatedEventDetails from "../../screen/CreatedEventDetails";
-import EventDetails from "../../screen/EventDetails";
+import CreateEvent from "../../screen/myEvents/CreateEvent";
+import CreatedEventDetails from "../../screen/myEvents/CreatedEventDetails";
+import EventDetails from "../../screen/eventFeed/EventDetails";
 
 const MyEventsStack = createNativeStackNavigator();
 

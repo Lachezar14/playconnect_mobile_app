@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import EventDetails from '../../screen/EventDetails';
-import QuickJoin from "../../screen/QuickJoin";
+import EventDetails from '../../screen/eventFeed/EventDetails';
+import QuickJoin from "../../screen/eventSwipe/QuickJoin";
 import {TouchableOpacity} from "react-native";
 import {Feather} from "@expo/vector-icons";
 import {getFocusedRouteNameFromRoute} from "@react-navigation/native";

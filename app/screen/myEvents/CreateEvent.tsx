@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import {View, TextInput, Button, StyleSheet, Text, Alert, ScrollView} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
-import { useAuth } from '../context/AuthContext';
-import LocationInput from "../components/LocationInput";
-import {EventInvite, Suggestion} from "../utilities/interfaces";
-import {createEvent, fetchEventById} from "../services/eventService";
-import {eventJoin} from "../services/eventParticipationService";
+import { useAuth } from '../../context/AuthContext';
+import LocationInput from "../../components/LocationInput";
+import {EventInvite, Suggestion} from "../../utilities/interfaces";
+import {createEvent, fetchEventById} from "../../services/eventService";
+import {eventJoin} from "../../services/eventParticipationService";
 import {useNavigation} from "@react-navigation/native";
-import UserInviteModal from "../modal/UserInviteModal";
-import {Event} from "../utilities/interfaces";
-import {fetchCompatibleUsers} from "../services/userService";
-import {getDayOfWeek} from "../utilities/getDayOfWeek";
-import {addEventInvite} from "../services/eventInviteService";
+import UserInviteModal from "../../modal/UserInviteModal";
+import {Event} from "../../utilities/interfaces";
+import {fetchCompatibleUsers} from "../../services/userService";
+import {getDayOfWeek} from "../../utilities/getDayOfWeek";
+import {addEventInvite} from "../../services/eventInviteService";
 import { Dropdown } from 'react-native-element-dropdown';
 
 const skillLevelOptions = [

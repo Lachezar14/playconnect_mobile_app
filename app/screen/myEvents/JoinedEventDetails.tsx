@@ -1,43 +1,41 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
+import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, FlatList} from 'react-native';
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useAuth } from '../../context/AuthContext';
+import {User, Event, Participant, UserStats} from '../../utilities/interfaces';
 import {
-    View,
-    Text,
-    StyleSheet,
-    Image,
-    ScrollView,
-    TouchableOpacity,
-    Alert,
-    RefreshControl, FlatList,
-} from 'react-native';
-import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import { useAuth } from '../context/AuthContext';
-import {Event, Participant, User} from '../utilities/interfaces';
-import {eventJoin, checkIfJoined, fetchParticipants} from "../services/eventParticipationService";
-import {fetchUserById} from "../services/userService";
+    checkIfCheckedIn,
+    checkIfJoined,
+    eventLeave,
+    fetchParticipants,
+    updateCheckInStatus
+} from "../../services/eventParticipationService";
 import {Feather, FontAwesome, Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
-import OpenGoogleMapsButton from "../components/OpenGoogleMapsButton";
+import OpenGoogleMapsButton from "../../components/OpenGoogleMapsButton";
+import {fetchUserById, fetchUserStats} from "../../services/userService";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {UserParticipantDetails} from "../components/user/UserParticipantDetails";
+import {UserParticipantDetails} from "../../components/user/UserParticipantDetails";
 
 // Define the types for the route params
 type RootStackParamList = {
-    EventDetails: { event: Event }; // Replace 'any' with the appropriate type for event
+    JoinedEventsDetails: { event: Event };
 };
 
 // Define props using NativeStackScreenProps
-type Props = NativeStackScreenProps<RootStackParamList, 'EventDetails'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'JoinedEventsDetails'>;
 
-const EventDetails: React.FC<Props> = ({ route, navigation }) => {
-    const { user } = useAuth(); // Get the user object from the AuthContext
-    const { event } = route.params; // Get event details passed through navigation
-    const [isJoined, setIsJoined] = useState<boolean>(false); // State to track if the user has joined
-    const [loading, setLoading] = useState<boolean>(true); // State to track loading
-    const [participants, setParticipants] = useState<Participant[]>([]); // For real participant data
-    const [refreshing, setRefreshing] = useState<boolean>(false);
+const JoinedEventDetails: React.FC<Props> = ({ route, navigation }) => {
+    const { user } = useAuth();
+    const { event } = route.params;
+    const [isJoined, setIsJoined] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [checkedIn, setCheckedIn] = useState<boolean>(false);
+
     const [eventCreator, setEventCreator] = useState<User | null>(null);
-    console.log('Event organizer:', eventCreator);
+    const [creatorStats, setCreatorStats] = useState<UserStats | null>(null);
 
-    const availableSpots = event.spots - (event.takenSpots || 0); // Calculate available spots
+    const [isLeavingEvent, setIsLeavingEvent] = useState(false);
 
     // Fetch event organizer
     useEffect(() => {
@@ -47,11 +45,11 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                 const creatorData = await fetchUserById(event.userId);
                 setEventCreator(creatorData);
 
-                // // Fetch event creator stats
-                // if (creatorData) {
-                //     const creatorStatsData = await fetchUserStats(event.userId);
-                //     setCreatorStats(creatorStatsData);
-                // }
+                // Fetch event creator stats
+                if (creatorData) {
+                    const creatorStatsData = await fetchUserStats(event.userId);
+                    setCreatorStats(creatorStatsData);
+                }
 
                 setLoading(false);
             } catch (error) {
@@ -80,7 +78,6 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
         }
     };
 
-    // Check if the user has joined the event
     const handleCheckIfJoined = async () => {
         if (!event.id || !user?.uid) {
             console.error('Event ID or User ID is undefined');
@@ -98,77 +95,98 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
         }
     };
 
-    const handleEventJoin = async () => {
+    // Unregister the user from the event
+    const handleEventLeave = async () => {
         if (!event.id || !user?.uid) {
             console.error('Event ID or User ID is undefined');
             return;
         }
 
         try {
-            await eventJoin(event.id, user.uid);
-            setIsJoined(true);
-            //setAlert({ show: true, message: 'Successfully joined the event!', type: 'success' });
-        } catch (error: Error | any) {
-            if (error.message === 'No more places available') {
-                Alert.alert('Registration Failed', 'Sorry, there are no more available places for this event.');
-            } else {
-                console.error('Error joining event: ', error);
-                Alert.alert('Error joining event', 'An error occurred while trying to join the event. Please try again later.');
-            }
+            await eventLeave(event.id, user.uid);
+            setIsJoined(false);
+            setIsLeavingEvent(false);
+            navigation.goBack();
+        } catch (error) {
+            console.error('Error leaving event: ', error);
+            Alert.alert('Error leaving event, please try again');
         }
     };
 
-    const handleGoToMyEvents = () => {
-        // @ts-ignore
-        navigation.navigate('MyEvents');
+    const handleCheckIn = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return
+        }
+
+        if (checkedIn) {
+            Alert.alert('Already Checked In', 'You have already checked in for this event.');
+            return;
+        }
+
+        if (!isCheckInEnabled()) {
+            const eventStartDateTime = new Date(event.date);
+            const timeUntilCheckIn = eventStartDateTime.getTime() - Date.now() - 15 * 60 * 1000;
+            const minutesUntilCheckIn = Math.ceil(timeUntilCheckIn / (60 * 1000));
+
+            Alert.alert(
+                'Check-in Not Available',
+                `Check-in opens 15 minutes before the event starts. Please try again in ${minutesUntilCheckIn} minutes.`
+            );
+            return;
+        }
+
+        try {
+            // Update the check-in status using the service method
+            await updateCheckInStatus(event.id, user?.uid);
+
+            setCheckedIn(true); // Set local state
+            Alert.alert('Success', 'You have successfully checked in!');
+        } catch (error) {
+            console.error('Error checking in:', error);
+            Alert.alert('Error checking in', 'Please try again later.');
+        }
+    };
+
+    const isCheckInEnabled = () => {
+        const eventStartDateTime = new Date(event.date);
+        const currentDateTime = new Date();
+        const timeDifference = eventStartDateTime.getTime() - currentDateTime.getTime();
+        return timeDifference <= 15 * 60 * 1000 && timeDifference >= 0; // Check if within 15 minutes before the event
+    };
+
+    const handleCheckIfCheckedIn = async () => {
+        if (!event.id || !user?.uid) {
+            console.error('Event ID or User ID is undefined');
+            return;
+        }
+
+        try {
+            const isCheckedIn = await checkIfCheckedIn(event.id, user?.uid);
+            setCheckedIn(isCheckedIn); // Set local state based on service result
+        } catch (error) {
+            console.error('Error checking check-in status:', error);
+        }
     };
 
     useEffect(() => {
-        handleCheckIfJoined(); // Check if the user is already registered when the component mounts
-        handleFetchParticipants(); // Fetch the participants list
+        handleCheckIfJoined();
+        handleFetchParticipants();
+        handleCheckIfCheckedIn();
     }, []);
 
     const eventDateTime = new Date(event.date);
     const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await handleCheckIfJoined();
-        setRefreshing(false);
-    };
-
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView
-                style={styles.scrollView}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-            >
-
-                {/* Back button */}
+            <ScrollView style={styles.scrollView}>
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
-
-                {/* Like Button */}
-                <TouchableOpacity
-                    style={styles.likeButton}
-                    onPress={() => navigation.goBack()}>
-                    <Ionicons name="heart" size={24} color="white" />
-                </TouchableOpacity>
-
-                {/* Share Button */}
-                <TouchableOpacity
-                    style={styles.shareButton}
-                    onPress={() => navigation.goBack()}>
-                    <Ionicons name="share-social" size={24} color="white" />
-                </TouchableOpacity>
-
-                {/* Event Image */}
                 <Image
                     source={{ uri: event.eventImage }}
                     style={styles.image}
@@ -185,19 +203,26 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                         )}
                     </View>
 
-                    {/* Event Date and Description */}
+                    {/* Event Date */}
                     <Text style={styles.eventDate}>{formattedTime} / {formattedDate}</Text>
 
                     {/* Location, Available Spots, and Sport Type */}
                     <View style={styles.infoContainer}>
+                            {checkedIn ? (
+                                    <View style={styles.infoItem}>
+                                        <Feather name="check-circle" size={35} color="#4A9F89" />
+                                        <Text style={styles.infoText}>Checked-In</Text>
+                                    </View>
+                            ) : (
+                                <View style={styles.infoItem}>
+                                    <Feather name="loader" size={35} color="#666" />
+                                    <Text style={styles.infoText}>Pending Check-In</Text>
+                                </View>
+                            )}
+                        <View style={styles.divider} />
                         <View style={styles.infoItem}>
                             <MaterialCommunityIcons name="map-marker" size={35} color="#4A9F89" />
                             <Text style={styles.infoText}>{event.distance || '795m'}</Text>
-                        </View>
-                        <View style={styles.divider} />
-                        <View style={styles.infoItem}>
-                            <MaterialCommunityIcons name="arm-flex" size={35} color="#4A9F89" />
-                            <Text style={styles.infoText}>{`${event.skillLevel}`}</Text>
                         </View>
                         <View style={styles.divider} />
                         <View style={styles.infoItem}>
@@ -205,6 +230,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                             <Text style={styles.infoText}>{event.sportType}</Text>
                         </View>
                     </View>
+
                     {/* Address and button to open in Google Maps */}
                     <OpenGoogleMapsButton event={event} />
 
@@ -222,7 +248,7 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
 
                     {/* Participants Section */}
                     <View style={styles.organizerContainer}>
-                        <Text style={styles.organizerTitle}>Participants - {event.takenSpots}/{event.spots}</Text>
+                        <Text style={styles.organizerTitle}>Participants</Text>
 
                         {/* Use FlatList to render each participant */}
                         <FlatList
@@ -259,44 +285,67 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
                         </View>
                     </View>
 
+                    {/* Leave Event Section */}
+                    {isJoined && (
+                        <View style={styles.leaveEventContainer}>
+                            <Text style={styles.sectionTitle}>Leave Event</Text>
+                            <Text style={styles.warningText}>
+                                If you leave the event, there's no going back. Your spot will be made available to other participants.
+                            </Text>
+                            <TouchableOpacity
+                                style={[
+                                    styles.leaveButton,
+                                    isLeavingEvent ? styles.leaveButtonPressed : styles.leaveButtonNormal
+                                ]}
+                                onPress={() => {
+                                    setIsLeavingEvent(true);
+                                    Alert.alert(
+                                        "Leave Event",
+                                        "Are you sure you want to leave this event?",
+                                        [
+                                            {
+                                                text: "Cancel",
+                                                onPress: () => setIsLeavingEvent(false),
+                                                style: "cancel"
+                                            },
+                                            {
+                                                text: "Yes, Leave",
+                                                onPress: handleEventLeave
+                                            }
+                                        ]
+                                    );
+                                }}
+                            >
+                                <Text style={[
+                                    styles.leaveButtonText,
+                                    isLeavingEvent ? styles.leaveButtonTextPressed : styles.leaveButtonTextNormal
+                                ]}>
+                                    Leave Event
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
 
-            {/* Fixed Join Event button at the bottom of the screen */}
+            {/* Fixed Check In button at the bottom of the screen */}
             <View style={styles.fixedButtonContainer}>
                 {loading ? (
                     <View style={styles.skeletonButton}>
                         <Text style={styles.skeletonText}>Loading...</Text>
                     </View>
                 ) : (
-                    <>
-                        {/* Show the available spots warning only if the user has not joined */}
-                        {!isJoined && availableSpots === 1 && (
-                            <Text style={styles.remainingSpotsFixed}>
-                                Only 1 place remaining!
-                            </Text>
-                        )}
-                        <TouchableOpacity
-                            style={isJoined ? styles.goToMyEventsButton : styles.joinButton}
-                            onPress={isJoined ? handleGoToMyEvents : handleEventJoin}
-                        >
-                            <View style={styles.buttonContent}>
-                                <Text style={styles.buttonText}>
-                                    {isJoined ? "Go to My Events" : "Join Event"}
-                                </Text>
-                                {!isJoined ? null : (
-                                    <Feather name="arrow-right" size={20} color="#fff" style={styles.arrowIcon} />
-                                )}
-                            </View>
-                        </TouchableOpacity>
-                    </>
+                    <TouchableOpacity
+                        style={[styles.checkInButton, (!isJoined || checkedIn) && styles.disabledButton]}
+                        onPress={handleCheckIn}
+                        disabled={!isJoined || checkedIn}
+                    >
+                        <Text style={styles.buttonText}>
+                            {checkedIn ? "Checked In" : "Check In"}
+                        </Text>
+                    </TouchableOpacity>
                 )}
             </View>
-            {/*{alert && alert.show && (*/}
-            {/*    <View style={styles.alertContainer}>*/}
-            {/*        <CustomAlert message={alert.message} type={alert.type} />*/}
-            {/*    </View>*/}
-            {/*)}*/}
         </SafeAreaView>
     );
 };
@@ -306,36 +355,11 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    alertContainer: {
-        position: 'absolute',
-        top: 70,
-        left: 20,
-        right: 20,
-        zIndex: 1000,
-    },
     backButton: {
         position: 'absolute',
-        top: 10,    // Adjust based on your screen layout
-        left: 5,   // Adjust based on your screen layout
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 30,
-        padding: 10,
-        zIndex: 100,
-    },
-    likeButton: {
-        position: 'absolute',
-        top: 10,    // Adjust based on your screen layout
-        right: 55,   // Adjust based on your screen layout
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 30,
-        padding: 10,
-        zIndex: 100,
-    },
-    shareButton: {
-        position: 'absolute',
-        top: 10,    // Adjust based on your screen layout
-        right: 5,   // Adjust based on your screen layout
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        top: 10,
+        left: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // White with 50% opacity
         borderRadius: 30,
         padding: 10,
         zIndex: 100,
@@ -349,17 +373,18 @@ const styles = StyleSheet.create({
     },
     detailsContainer: {
         padding: 20,
-        paddingBottom: 80, // Add extra padding at the bottom to account for the fixed button
+        paddingBottom: 50, // Add extra padding at the bottom to account for the fixed button
     },
     eventTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#000',
+        marginBottom: 5,
     },
     eventDate: {
-        fontSize: 16,
+        fontSize: 17,
         color: '#4A9F89',
-        marginBottom: 10,
+        marginBottom: 20,
     },
     eventDescription: {
         fontSize: 16,
@@ -371,7 +396,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 20,
-        marginTop: 10,
     },
     infoItem: {
         flex: 1,
@@ -382,6 +406,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         textAlign: 'center',
+        paddingHorizontal: 10,
     },
     divider: {
         width: 1,
@@ -403,7 +428,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     organizerContainer: {
-        marginBottom: 20,
     },
     organizerTitle: {
         fontSize: 18,
@@ -443,24 +467,12 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#E0E0E0',
     },
-    remainingSpotsFixed: {
-        color: '#FF6B6B',
-        fontSize: 14,
+    checkInReminder: {
+        color: 'gray',
+        fontSize: 12,
         fontWeight: 'bold',
         marginBottom: 10,
         textAlign: 'center',
-    },
-    joinButton: {
-        backgroundColor: '#4A9F89',
-        borderRadius: 25,
-        paddingVertical: 15,
-        alignItems: 'center',
-    },
-    leaveButton: {
-        backgroundColor: '#d9534f',
-        borderRadius: 25,
-        paddingVertical: 15,
-        alignItems: 'center',
     },
     goToMyEventsButton: {
         backgroundColor: '#5cbbcf', // Gray color for the button
@@ -513,10 +525,78 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
+    checkInButton: {
+        backgroundColor: '#4A9F89',
+        borderRadius: 25,
+        paddingVertical: 15,
+        alignItems: 'center',
+    },
+    disabledButton: {
+        backgroundColor: '#A0A0A0',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    leaveEventContainer: {
+        marginTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+        paddingTop: 20,
+        marginBottom: 50,
+    },
+    warningText: {
+        fontSize: 15,
+        color: '#666',
+        marginBottom: 15,
+    },
+    leaveButton: {
+        borderRadius: 25,
+        paddingVertical: 15,
+        alignItems: 'center',
+        borderWidth: 2,
+    },
+    leaveButtonNormal: {
+        backgroundColor: 'white',
+        borderColor: '#d9534f',
+    },
+    leaveButtonPressed: {
+        backgroundColor: '#d9534f',
+        borderColor: '#d9534f',
+    },
+    leaveButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    leaveButtonTextNormal: {
+        color: '#d9534f',
+    },
+    leaveButtonTextPressed: {
+        color: 'white',
+    },
     divider2: {
         height: 1,
         backgroundColor: '#E0E0E0',
         marginBottom: 20,
+    },
+    likeButton: {
+        position: 'absolute',
+        top: 10,    // Adjust based on your screen layout
+        right: 55,   // Adjust based on your screen layout
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
+    },
+    shareButton: {
+        position: 'absolute',
+        top: 10,    // Adjust based on your screen layout
+        right: 5,   // Adjust based on your screen layout
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 30,
+        padding: 10,
+        zIndex: 100,
     },
     ratingContainer: {
         flexDirection: "row",
@@ -530,4 +610,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default EventDetails;
+export default JoinedEventDetails;
