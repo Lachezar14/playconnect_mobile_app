@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.playconnect.mobile.app",
+      "permissions": ["ACCESS_NETWORK_STATE", "INTERNET"],
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

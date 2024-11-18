@@ -31,7 +31,7 @@ const LocationInput: React.FC<LocationInputProps> = ({ setLocation, resetQuery, 
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&countrycodes=nl&format=json&addressdetails=1&limit=5`,
                 {
                     headers: {
-                        'User-Agent': 'Playconnect/1.1 (lachezar@gmail.com)', // Replace with your app name and email
+                        'User-Agent': 'Playconnect/1.1 (lachezar@gmail.com)',
                     },
                 }
             );
