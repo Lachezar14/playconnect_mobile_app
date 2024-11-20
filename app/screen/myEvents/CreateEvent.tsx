@@ -21,6 +21,12 @@ const skillLevelOptions = [
     { label: 'Advanced', value: 'Advanced' },
 ];
 
+const sportTypeOptions = [
+    { label: 'Football', value: 'Football' },
+    { label: 'Tennis', value: 'Tennis' },
+    { label: 'Padel', value: 'Padel' },
+    { label: 'Basketball', value: 'Basketball' },
+];
 
 const CreateEvent = () => {
     const { user } = useAuth();
@@ -192,11 +198,18 @@ const CreateEvent = () => {
                             placeholder="Enter description"
                         />
                         <Text style={styles.label}>Sport Type</Text>
-                        <TextInput
-                            style={styles.input}
+                        <Dropdown
+                            style={styles.dropdown}
+                            data={sportTypeOptions}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Select sport type"
                             value={sportType}
-                            onChangeText={setSportType}
-                            placeholder="Enter sport type"
+                            onChange={(item) => setSportType(item.value)}
+                            containerStyle={styles.dropdownContainer}
+                            placeholderStyle={styles.placeholderStyle}
+                            selectedTextStyle={styles.selectedTextStyle}
+                            inputSearchStyle={styles.inputSearchStyle}
                         />
                         <Text style={styles.label}>Skill Level</Text>
                         <Dropdown
