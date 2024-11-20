@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {View, TextInput, Button, StyleSheet, Text, Alert, ScrollView} from 'react-native';
+import {View, TextInput, Button, StyleSheet, Text, Alert, ScrollView, TouchableOpacity} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +14,7 @@ import {fetchCompatibleUsers} from "../../services/userService";
 import {getDayOfWeek} from "../../utilities/getDayOfWeek";
 import {addEventInvite} from "../../services/eventInviteService";
 import { Dropdown } from 'react-native-element-dropdown';
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const skillLevelOptions = [
     { label: 'Beginner', value: 'Beginner' },
@@ -280,16 +281,25 @@ const CreateEvent = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {renderStep()}
 
             <View style={styles.buttonContainer}>
-                {currentStep > 1 && (
-                    <Button title="Previous" onPress={prevStep} />
+                {currentStep === 1 ? (
+                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                        <Text style={styles.buttonText}>Back</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={styles.backButton} onPress={prevStep}>
+                        <Text style={styles.buttonText}>Previous</Text>
+                    </TouchableOpacity>
                 )}
-                <Button title={currentStep === 3 ? 'Submit' : 'Next'} onPress={nextStep} />
+                <TouchableOpacity style={styles.nextButton} onPress={nextStep}>
+                    <Text style={styles.buttonText}>
+                        {currentStep === 3 ? 'Submit' : 'Next'}
+                    </Text>
+                </TouchableOpacity>
             </View>
-
             {/* Invite User Modal */}
             <UserInviteModal
                 isVisible={isModalVisible}
@@ -297,7 +307,7 @@ const CreateEvent = () => {
                 event={newEvent as Event}
                 currentUserId={user?.uid || ''}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -308,6 +318,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 8,
+        color: '#333',
     },
     pickedValue: {
         fontSize: 16,
@@ -320,64 +331,54 @@ const styles = StyleSheet.create({
         paddingTop: 40,
         backgroundColor: '#fff',
     },
-    headerText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
     input: {
         height: 50,
-        borderColor: '#E5E7EB',
         borderWidth: 1,
-        borderRadius: 10,
+        borderColor: '#ddd',
         paddingHorizontal: 15,
-        marginBottom: 16,
-        backgroundColor: '#F9FAFB',
-        color: '#333',
-    },
-    button: {
-        height: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        backgroundColor: '#EFF6FF',
-        marginBottom: 16,
-    },
-    buttonText: {
-        color: '#1D4ED8',
-        fontSize: 16,
-    },
-    submitButton: {
-        height: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        backgroundColor: '#1D4ED8',
-    },
-    submitButtonText: {
-        color: '#FFF',
-        fontSize: 18,
-        fontWeight: 'bold',
+        borderRadius: 8,
+        backgroundColor: '#f7f7f7',
+        marginBottom: 10,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 20,
+        marginTop: 'auto',
+        marginBottom: 40,
+    },
+    backButton: {
+        backgroundColor: '#CBD5E0',
+        borderRadius: 25,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        flex: 0.45,
+    },
+    nextButton: {
+        backgroundColor: '#38A169',
+        borderRadius: 25,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        flex: 0.45,
+    },
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     dropdown: {
         height: 50,
-        borderColor: '#E5E7EB',
         borderWidth: 1,
-        borderRadius: 10,
+        borderColor: '#ddd',
+        borderRadius: 8,
         paddingHorizontal: 15,
-        marginBottom: 16,
-        backgroundColor: '#F9FAFB',
+        marginBottom: 10,
+        backgroundColor: '#f7f7f7',
     },
     dropdownContainer: {
-        backgroundColor: '#F9FAFB',
-        borderRadius: 10,
+        backgroundColor: '#f7f7f7',
+        borderRadius: 8,
     },
     placeholderStyle: {
         fontSize: 16,
