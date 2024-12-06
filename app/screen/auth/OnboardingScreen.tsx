@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import {View, Text, Image, StyleSheet, TouchableOpacity, ImageBackground} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from "@expo/vector-icons";
+import {Feather, MaterialIcons} from "@expo/vector-icons";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebaseConfig";
 import { doc, runTransaction } from "firebase/firestore";
-import {CommonActions} from "@react-navigation/native";
 
-const sports = ['Football', 'Tennis', 'Basketball', 'Running'];
+const sports = ['Football', 'Tennis', 'Basketball', 'Padel'];
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const skillLevels = ['Beginner', 'Intermediate', 'Advanced'];
 
@@ -17,6 +16,8 @@ const Onboarding = ({ route, navigation }) => {
     const [selectedDays, setSelectedDays] = useState([]);
     const [selectedSkill, setSelectedSkill] = useState('');
     const { password, email, firstName, lastName } = route.params;
+
+    const totalSteps = 3; // Total number of steps in the onboarding
 
     const handleNext = () => {
         if (step < 2) {
@@ -76,55 +77,87 @@ const Onboarding = ({ route, navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+            {/* Progress Bar */}
+            <View style={styles.progressBarContainer}>
+                <View
+                    style={[
+                        styles.progressBar,
+                        { width: `${((step + 1) / totalSteps) * 100}%` }
+                    ]}
+                />
+            </View>
+
             {step === 0 && (
                 <View style={styles.section}>
-                    <Text style={styles.heading}>Favourite Sports</Text>
+                    <Text style={styles.heading}>What do you like?</Text>
                     <Text style={styles.subheading}>
-                        Choose your favourite sports so we can show you events related to those sports!
+                        Choose the picture that best represents you and your interests!
                     </Text>
-                    {sports.map((sport) => (
-                        <TouchableOpacity
-                            key={sport}
-                            style={[
-                                styles.radioButtonRow,
-                                selectedSport === sport && styles.selectedItem
-                            ]}
-                            onPress={() => setSelectedSport(sport)}
-                        >
-                            <Text style={styles.sportName}>{sport}</Text>
-                            <MaterialIcons
-                                name={selectedSport === sport ? "radio-button-checked" : "radio-button-unchecked"}
-                                size={24}
-                                color={selectedSport === sport ? "#38A169" : "#767577"}
-                            />
-                        </TouchableOpacity>
-                    ))}
+                    <View style={styles.cardContainer}>
+                        {[
+                            { name: 'Football', image: 'https://images.unsplash.com/photo-1511886929837-354d827aae26?q=80&w=3164&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+                            { name: 'Tennis', image: 'https://plus.unsplash.com/premium_photo-1663045882560-3bdd5f71687c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1976&q=80' },
+                            { name: 'Basketball', image: 'https://plus.unsplash.com/premium_photo-1668767725891-58f5cd788105?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+                            { name: 'Padel', image: 'https://images.unsplash.com/photo-1612534847738-b3af9bc31f0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80' },
+                        ].map((sport) => (
+                            <TouchableOpacity
+                                key={sport.name}
+                                style={[
+                                    styles.card,
+                                    selectedSport === sport.name && styles.selectedCard,
+                                ]}
+                                onPress={() => setSelectedSport(sport.name)}
+                            >
+                                <ImageBackground
+                                    source={{ uri: sport.image }}
+                                    style={styles.sportImage}
+                                >
+                                    <View style={styles.imageOverlay}>
+                                        {/* Circle with checkmark icon when selected */}
+                                        {selectedSport === sport.name && (
+                                            <View style={styles.selectionCircle}>
+                                                <Feather name="check" size={16} color="black" />
+                                            </View>
+                                        )}
+                                    </View>
+                                </ImageBackground>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
             )}
 
             {step === 1 && (
                 <View style={styles.section}>
-                    <Text style={styles.heading}>What's your skill level?</Text>
+                    <Text style={styles.heading}>How good are you?</Text>
                     <Text style={styles.subheading}>
-                        Tell us your skill level so we can match you with users of similar skill levels!
+                        Tell us how good are you at your favourite sport!
                     </Text>
-                    {skillLevels.map((skill) => (
-                        <TouchableOpacity
-                            key={skill}
-                            style={[
-                                styles.radioButtonRow,
-                                selectedSkill === skill && styles.selectedItem
-                            ]}
-                            onPress={() => setSelectedSkill(skill)}
-                        >
-                            <Text style={styles.sportName}>{skill}</Text>
-                            <MaterialIcons
-                                name={selectedSkill === skill ? "radio-button-checked" : "radio-button-unchecked"}
-                                size={24}
-                                color={selectedSkill === skill ? "#38A169" : "#767577"}
-                            />
-                        </TouchableOpacity>
-                    ))}
+                    <View style={styles.verticalCardContainer}>
+                        {[
+                            { level: 'Advanced', stars: '★★★' },
+                            { level: 'Intermediate', stars: '★★' },
+                            { level: 'Beginner', stars: '★' },
+                        ].map((skill) => (
+                            <TouchableOpacity
+                                key={skill.level}
+                                style={[
+                                    styles.skillCardVertical,
+                                    selectedSkill === skill.level && styles.selectedSkillCard,
+                                ]}
+                                onPress={() => setSelectedSkill(skill.level)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.skillStars,
+                                        selectedSkill === skill.level && styles.selectedSkillStars,
+                                    ]}
+                                >
+                                    {skill.stars}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
             )}
 
@@ -134,31 +167,29 @@ const Onboarding = ({ route, navigation }) => {
                     <Text style={styles.subheading}>
                         Select the days you are available to play sports so we can suggest events on those days!
                     </Text>
-                    {daysOfWeek.map((day) => (
-                        <TouchableOpacity
-                            key={day}
-                            style={[
-                                styles.checkboxRow,
-                                selectedDays.includes(day) && styles.selectedItem
-                            ]}
-                            onPress={() => {
-                                if (selectedDays.includes(day)) {
-                                    setSelectedDays(selectedDays.filter(d => d !== day));
-                                } else {
-                                    setSelectedDays([...selectedDays, day]);
-                                }
-                            }}
-                        >
-                            <Text style={styles.sportName}>{day}</Text>
-                            <MaterialIcons
-                                name={selectedDays.includes(day) ? "check-box" : "check-box-outline-blank"}
-                                size={24}
-                                color={selectedDays.includes(day) ? "#38A169" : "#767577"}
-                            />
-                        </TouchableOpacity>
-                    ))}
+                    <View style={styles.dayCardContainer}>
+                        {daysOfWeek.map((day) => (
+                            <TouchableOpacity
+                                key={day}
+                                style={[
+                                    styles.dayCard,
+                                    selectedDays.includes(day) && styles.selectedDayCard
+                                ]}
+                                onPress={() => {
+                                    if (selectedDays.includes(day)) {
+                                        setSelectedDays(selectedDays.filter(d => d !== day));
+                                    } else {
+                                        setSelectedDays([...selectedDays, day]);
+                                    }
+                                }}
+                            >
+                                <Text style={styles.dayText}>{day}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
             )}
+
 
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -258,6 +289,113 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    progressBarContainer: {
+        height: 6,
+        backgroundColor: '#E2E8F0',
+        borderRadius: 3,
+        overflow: 'hidden',
+        marginBottom: 20,
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#38A169',
+    },
+    cardContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginTop: 16,
+    },
+    card: {
+        width: '48%',
+        borderRadius: 15,
+        overflow: 'hidden',
+        position: 'relative',
+        height: 200, // Longer cards
+    },
+    sportImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    imageOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.2)', // Black filter
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    selectedCard: {
+        borderWidth: 4,
+        borderColor: '#38A169', // Clearer green border
+    },
+    // Circle at the bottom right
+    selectionCircle: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        width: 25,
+        height: 25,
+        borderRadius: 12.5, // Circle shape
+        backgroundColor: '#d3d3d3', // Light gray color for the circle
+        justifyContent: 'center',
+        alignItems: 'center', // Center the icon inside the circle
+        borderWidth: 2,
+        borderColor: '#d3d3d3', // Green border around the circle
+    },
+    verticalCardContainer: {
+        marginTop: 10,
+    },
+    skillCardVertical: {
+        width: '100%',
+        height: 80, // Adjust height for vertical layout
+        borderRadius: 10,
+        backgroundColor: '#f2f3f4',
+        borderColor: '#e8eaec',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        marginBottom: 15, // Spacing between cards
+    },
+    selectedSkillCard: {
+        borderColor: '#38A169', // Green border for selected card
+    },
+    skillStars: {
+        fontSize: 36, // Big stars
+        color: '#FFD700', // Gold color
+    },
+    selectedSkillStars: {
+        color: '#FFB800', // Slightly brighter gold for selection
+    },
+    dayCardContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginTop: 16,
+    },
+    dayCard: {
+        width: '48%',
+        height: 70, // Adjusted height to match the skill card's size
+        borderRadius: 15,
+        borderWidth: 2,
+        borderColor: '#e8eaec',
+        backgroundColor: '#f2f3f4',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+        marginBottom: 12,
+    },
+    dayText: {
+        fontSize: 18,
+        color: '#2D3748',
+        fontWeight: 'bold',
+    },
+    selectedDayCard: {
+        borderColor: '#38A169', // Selected card color
+        backgroundColor: '#F0FFF4', // Light green background when selected
+        borderWidth: 2,
     },
 });
 
