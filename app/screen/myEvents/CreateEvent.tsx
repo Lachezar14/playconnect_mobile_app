@@ -240,8 +240,9 @@ const CreateEvent = () => {
                 return (
                     <View>
                         <Text style={styles.label}>Event Date</Text>
-                        <Button title="Pick Date" onPress={() => setShowDatePicker(true)} />
-                        {date && <Text style={styles.pickedValue}>Selected Date: {moment(date).format('YYYY-MM-DD')}</Text>}
+                        <TouchableOpacity style={styles.selectButton} onPress={() => setShowDatePicker(true)}>
+                            <Text style={styles.dateButtonText}>{date ? moment(date).format('YYYY-MM-DD') : 'Pick Date'}</Text>
+                        </TouchableOpacity>
                         {showDatePicker && (
                             <DateTimePicker
                                 value={date || new Date()}
@@ -252,8 +253,9 @@ const CreateEvent = () => {
                         )}
 
                         <Text style={styles.label}>Event Time</Text>
-                        <Button title="Pick Time" onPress={() => setShowTimePicker(true)} />
-                        {time && <Text style={styles.pickedValue}>Selected Time: {moment(time).format('HH:mm')}</Text>}
+                        <TouchableOpacity style={styles.selectButton} onPress={() => setShowTimePicker(true)}>
+                            <Text style={styles.dateButtonText}>{time ? moment(time).format('HH:mm') : 'Pick Time'}</Text>
+                        </TouchableOpacity>
                         {showTimePicker && (
                             <DateTimePicker
                                 value={time || new Date()}
@@ -391,6 +393,21 @@ const styles = StyleSheet.create({
     inputSearchStyle: {
         height: 40,
         fontSize: 16,
+        color: '#333',
+    },
+    selectButton: {
+        height: 50,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        backgroundColor: '#f7f7f7',
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    dateButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
         color: '#333',
     },
 });

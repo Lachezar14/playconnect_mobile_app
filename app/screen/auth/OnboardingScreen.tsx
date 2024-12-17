@@ -8,7 +8,7 @@ import SportCards from "../../components/onboarding/SportCards";
 import SkillLevelCards from "../../components/onboarding/SkillLevelCards";
 import DayCards from "../../components/onboarding/DayCards";
 
-const Onboarding = ({ route, navigation }) => {
+const Onboarding = ({ route, navigation }: any) => {
     const [step, setStep] = useState(0);  // Track the current step
     const [selectedSport, setSelectedSport] = useState('');
     const [selectedDays, setSelectedDays] = useState([]);
@@ -22,9 +22,6 @@ const Onboarding = ({ route, navigation }) => {
             setStep(step + 1);
         } else {
             savePreferences();
-            navigation.navigate('Main', {
-                screen: 'EventsTab'  // Use the actual tab screen name from MainTabNavigator
-            });
         }
     };
 
@@ -98,6 +95,7 @@ const Onboarding = ({ route, navigation }) => {
                 <SkillLevelCards
                     selectedSkill={selectedSkill}
                     onSelectSkill={setSelectedSkill}
+                    selectedSport={selectedSport}
                 />
             )}
 
@@ -106,6 +104,7 @@ const Onboarding = ({ route, navigation }) => {
                 <DayCards
                     selectedDays={selectedDays}
                     onSelectDays={setSelectedDays}
+                    selectedSport={selectedSport}
                 />
             )}
 
@@ -127,6 +126,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         backgroundColor: '#F7F8FA',
+        flexGrow: 1,
     },
     buttonContainer: {
         flexDirection: 'row',

@@ -10,14 +10,15 @@ const skillLevels = [
 interface SkillSelectionProps {
     selectedSkill: string;
     onSelectSkill: (skill: string) => void;
+    selectedSport: string;
 }
 
-const SkillLevelCards: React.FC<SkillSelectionProps> = ({ selectedSkill, onSelectSkill }) => {
+const SkillLevelCards: React.FC<SkillSelectionProps> = ({ selectedSkill, onSelectSkill, selectedSport }) => {
     return (
         <View style={styles.section}>
-            <Text style={styles.heading}>How good are you?</Text>
+            <Text style={styles.heading}>How good are you at {selectedSport}?</Text>
             <Text style={styles.subheading}>
-                Tell us how good are you at your favourite sport!
+                Tell us how good are you! Are you a pro, just a casual or new to the game?
             </Text>
             <View style={styles.verticalCardContainer}>
                 {skillLevels.map((skill) => (
