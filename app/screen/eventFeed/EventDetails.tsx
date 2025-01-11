@@ -119,8 +119,15 @@ const EventDetails: React.FC<Props> = ({ route, navigation }) => {
     };
 
     const handleGoToMyEvents = () => {
-        // @ts-ignore
-        navigation.navigate('MyEvents');
+        if (isJoined) {
+            try {
+                // @ts-ignore
+                navigation.navigate('MyEventsStack');
+            } catch (error) {
+                console.error('Navigation error:', error);
+                Alert.alert('Navigation Error', 'Unable to navigate to My Events.');
+            }
+        }
     };
 
     useEffect(() => {

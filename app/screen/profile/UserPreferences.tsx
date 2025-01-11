@@ -1,18 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { MaterialIcons } from "@expo/vector-icons";
-import CheckBox from 'react-native-check-box';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { fetchUserById, updateUserPreferences } from "../../services/userService";
 
-const UserPreferences = () => {
-    // List of sports to choose from
-    const sportsList = ['Basketball', 'Football', 'Tennis', 'Padel', 'Volleyball'];
-    // Skill levels
-    const skillLevels = ['Beginner', 'Intermediate', 'Professional'];
-    // Days of the week
-    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+// List of sports to choose from
+//const sportsList = ['Basketball', 'Football', 'Tennis', 'Padel', 'Volleyball'];
+// Skill levels
+const skillLevels = ['Beginner', 'Intermediate', 'Professional'];
+// Days of the week
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+// Mapping of sports to their corresponding icons
+const sportIcons = {
+    Football: "soccer",
+    Basketball: "basketball",
+    Tennis: "tennis",
+    Padel: "table-tennis",
+};
+
+const sportsList = Object.keys(sportIcons); // Get the list of sport names
+
+const UserPreferences = () => {
     // Keep track of the selected sport (single value)
     const [selectedSport, setSelectedSport] = useState<string | null>(null);
     // Keep track of the user's availability (boolean)
@@ -98,21 +107,98 @@ const UserPreferences = () => {
                 {/* Favorite Sports Section */}
                 <View style={styles.section}>
                     <Text style={styles.title}>Favorite Sport</Text>
-                    {sportsList.map((sport) => (
-                        <View key={sport} style={styles.radioButtonRow}>
-                            <Text style={styles.sportName}>{sport}</Text>
+                    <Text style={styles.description}>
+                        Select your favorite sport. This will help tailor event suggestions to your interests.
+                    </Text>
+                    <View style={styles.sportButtonContainer}>
+                        {sportsList.map((sport) => (
                             <TouchableOpacity
+                                key={sport}
+                                style={[
+                                    styles.sportButton,
+                                    selectedSport === sport && styles.sportButtonSelected, // Highlight selected sport
+                                ]}
                                 onPress={() => setSelectedSport(sport)}
-                                style={styles.radioButton}
                             >
-                                {selectedSport === sport ? (
-                                    <MaterialIcons name="radio-button-checked" size={24} color="#38A169" />
-                                ) : (
-                                    <MaterialIcons name="radio-button-unchecked" size={24} color="#767577" />
-                                )}
+                                <MaterialCommunityIcons
+                                    name={sportIcons[sport]} // Dynamically use the correct icon based on sport
+                                    size={24}
+                                    color={selectedSport === sport ? "#fff" : "#6b6b6b"} // Icon color changes based on selection
+                                    style={styles.sportIcon}
+                                />
+                                <Text
+                                    style={[
+                                        styles.sportButtonText,
+                                        selectedSport === sport && styles.sportButtonTextSelected, // Change text color for selected sport
+                                    ]}
+                                >
+                                    {sport}
+                                </Text>
                             </TouchableOpacity>
-                        </View>
-                    ))}
+                        ))}
+                    </View>
+                </View>
+
+                {/* Skill Level Section */}
+                <View style={styles.section}>
+                    <Text style={styles.title}>Skill Level</Text>
+                    <Text style={styles.description}>
+                        Your skill level is system-calculated based on activity, match feedback, and scores. It updates automatically over time.
+                    </Text>
+                    <View style={styles.skillLevelRow}>
+                        <Text style={styles.skillLevelText}>Your Skill Level:</Text>
+                        <Text style={styles.skillLevelValue}>{selectedSkill || 'N/A'}</Text>
+                    </View>
+                </View>
+
+                {/* Weekly Availability Section */}
+                <View style={styles.section}>
+                    <Text style={styles.title}>Availability This Week</Text>
+                    <Text style={styles.description}>
+                        Select the days you are available for sports events.
+                    </Text>
+                    <View style={styles.dayButtonContainer}>
+                        {daysOfWeek.slice(0, 4).map((day) => (
+                            <TouchableOpacity
+                                key={day}
+                                style={[
+                                    styles.dayButton,
+                                    availability[day] && styles.dayButtonSelected, // Highlight selected buttons
+                                ]}
+                                onPress={() => setAvailability((prev) => ({ ...prev, [day]: !prev[day] }))}
+                            >
+                                <Text
+                                    style={[
+                                        styles.dayButtonText,
+                                        availability[day] && styles.dayButtonTextSelected, // Change text color for selected buttons
+                                    ]}
+                                >
+                                    {day.slice(0, 3)} {/* Shortened day name */}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                    <View style={styles.dayButtonContainer}>
+                        {daysOfWeek.slice(4).map((day) => (
+                            <TouchableOpacity
+                                key={day}
+                                style={[
+                                    styles.dayButton,
+                                    availability[day] && styles.dayButtonSelected, // Highlight selected buttons
+                                ]}
+                                onPress={() => setAvailability((prev) => ({ ...prev, [day]: !prev[day] }))}
+                            >
+                                <Text
+                                    style={[
+                                        styles.dayButtonText,
+                                        availability[day] && styles.dayButtonTextSelected, // Change text color for selected buttons
+                                    ]}
+                                >
+                                    {day.slice(0, 3)} {/* Shortened day name */}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
 
                 {/* User Availability Section */}
@@ -135,40 +221,6 @@ const UserPreferences = () => {
                     </Text>
                 </View>
 
-                {/* Skill Level Section */}
-                <View style={styles.section}>
-                    <Text style={styles.title}>Skill Level</Text>
-                    {skillLevels.map((level) => (
-                        <View key={level} style={styles.radioButtonRow}>
-                            <Text style={styles.sportName}>{level}</Text>
-                            <TouchableOpacity
-                                onPress={() => setSelectedSkill(level)}
-                                style={styles.radioButton}
-                            >
-                                {selectedSkill === level ? (
-                                    <MaterialIcons name="radio-button-checked" size={24} color="#38A169" />
-                                ) : (
-                                    <MaterialIcons name="radio-button-unchecked" size={24} color="#767577" />
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    ))}
-                </View>
-
-                {/* Weekly Availability Section */}
-                <View style={styles.section}>
-                    <Text style={styles.title}>Availability This Week</Text>
-                    {daysOfWeek.map((day) => (
-                        <View key={day} style={styles.checkboxRow}>
-                            <Text style={styles.sportName}>{day}</Text>
-                            <CheckBox
-                                isChecked={availability[day]}
-                                onClick={() => setAvailability((prev) => ({ ...prev, [day]: !prev[day] }))}
-                                checkBoxColor="#38A169"
-                            />
-                        </View>
-                    ))}
-                </View>
             </ScrollView>
 
             {/* Save Button */}
@@ -199,12 +251,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 15,
         alignSelf: 'center',
-    },
-    checkboxRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 15,
     },
     sportName: {
         fontSize: 16,
@@ -239,14 +285,88 @@ const styles = StyleSheet.create({
         color: '#6b6b6b',
         marginTop: 10,
     },
-    radioButtonRow: {
+    skillLevelRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 15,
+        marginTop: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
     },
-    radioButton: {
-        // Align radio button to the far right
+    skillLevelText: {
+        fontSize: 16,
+        color: '#6b6b6b',
+    },
+    skillLevelValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#38A169',
+    },
+    dayButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center', // Center the buttons horizontally
+        alignItems: 'center',      // Align buttons vertically (if necessary)
+        marginTop: 1,
+        marginBottom: 1,
+        flexWrap: 'wrap', // Allow wrapping to a new line
+    },
+    dayButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: 4, // Add margin to ensure buttons have space between them
+    },
+    dayButtonSelected: {
+        backgroundColor: '#38A169', // Highlight color for selected days
+    },
+    dayButtonText: {
+        fontSize: 14,
+        color: '#6b6b6b',
+        fontWeight: 'bold',
+    },
+    dayButtonTextSelected: {
+        color: '#fff', // Text color for selected days
+    },
+    sportButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap', // Allow wrapping if needed
+        marginTop: 10,
+        marginBottom: 10,
+    },
+    sportButton: {
+        backgroundColor: '#f0f0f0',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 16, // Adjust for square corners
+        margin: 5, // Add space between the buttons
+        alignItems: 'center',
+        width: 140, // Adjust width to make it square-like
+        height: 60, // Keep height equal to width for a square shape
+        textAlign: 'center',
+        flexDirection: 'row', // Align text and icon horizontally
+    },
+    sportButtonSelected: {
+        backgroundColor: '#38A169', // Highlight color for selected sport
+    },
+    sportIcon: {
+        marginRight: 8, // Add some space between the icon and text
+    },
+    sportButtonText: {
+        fontSize: 14,
+        color: '#6b6b6b',
+        fontWeight: 'bold',
+    },
+    sportButtonTextSelected: {
+        color: '#fff', // Change text color for selected sport
     },
 });
 

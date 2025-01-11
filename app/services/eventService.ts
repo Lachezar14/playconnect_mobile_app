@@ -154,7 +154,7 @@ export const fetchEventsCreatedByUser = async (userId: string): Promise<Event[]>
 };
 
 // Fetch upcoming events that the user has not joined
-export const fetchUpcomingEventsNotJoinedByUser = async (userId: string): Promise<Event[]> => {
+export const fetchUpcomingEventsNotJoinedByUser = async (userId: string, favouriteSport: string): Promise<Event[]> => {
     try {
         // Step 1: Fetch upcoming events from Firestore
         const currentDate = new Date().toISOString(); // Convert to ISO 8601 string in UTC format
@@ -176,7 +176,17 @@ export const fetchUpcomingEventsNotJoinedByUser = async (userId: string): Promis
         });
 
         // Wait for all event join checks to complete, and filter out nulls
-        return (await Promise.all(eventPromises)).filter(Boolean) as Event[];
+        const events = (await Promise.all(eventPromises)).filter(Boolean) as Event[];
+
+        // Step 3: Sort events by sportType matching the user's favouriteSport
+        return events.sort((a, b) => {
+            if (a.sportType === favouriteSport && b.sportType !== favouriteSport) {
+                return -1; // a comes first
+            } else if (a.sportType !== favouriteSport && b.sportType === favouriteSport) {
+                return 1; // b comes first
+            }
+            return 0; // No change
+        });
     } catch (error) {
         console.error("Error fetching upcoming events not joined by user:", error);
         return [];

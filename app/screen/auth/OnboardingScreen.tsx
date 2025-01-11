@@ -43,7 +43,12 @@ const Onboarding = ({ route, navigation }: any) => {
                 "https://randomuser.me/api/portraits/men/22.jpg",
                 "https://randomuser.me/api/portraits/men/45.jpg",
                 "https://randomuser.me/api/portraits/men/32.jpg",
-                "https://randomuser.me/api/portraits/men/64.jpg"
+                "https://randomuser.me/api/portraits/men/64.jpg",
+                "https://randomuser.me/api/portraits/men/33.jpg",
+                "https://randomuser.me/api/portraits/men/25.jpg",
+                "https://randomuser.me/api/portraits/men/47.jpg",
+                "https://randomuser.me/api/portraits/men/31.jpg",
+                "https://randomuser.me/api/portraits/men/62.jpg",
             ];
 
             // Select a random profile picture

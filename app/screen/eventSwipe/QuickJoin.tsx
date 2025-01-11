@@ -11,6 +11,7 @@ import { Event } from '../../utilities/interfaces';
 import {eventJoin} from "../../services/eventParticipationService";
 import {useAuth} from "../../context/AuthContext";
 import CustomAlert from "../../components/CustomAlert";
+import {fetchUserById} from "../../services/userService";
 
 const defaultFilters = { sport: 'All', maxDistance: 50 };
 
@@ -30,8 +31,9 @@ const QuickJoin = ({ navigation, route }) => {
 
     useEffect(() => {
         const loadEventsAndLocation = async () => {
+            const userDetails = await fetchUserById(user?.uid || '');
             const userLocation = await getUserLocation();
-            const fetchedEvents = await fetchUpcomingEventsNotJoinedByUser(user?.uid || '');
+            const fetchedEvents = await fetchUpcomingEventsNotJoinedByUser(user?.uid || '', userDetails?.favouriteSport);
 
             if (userLocation) {
                 const eventsWithDistance = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
