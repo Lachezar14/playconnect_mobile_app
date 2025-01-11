@@ -1,15 +1,31 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons'; // Install with `expo install @expo/vector-icons`
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+
+// Mapping for day names
+const dayNameMapping: { [key: string]: string } = {
+    Mon: 'Monday',
+    Tue: 'Tuesday',
+    Wed: 'Wednesday',
+    Thu: 'Thursday',
+    Fri: 'Friday',
+    Sat: 'Saturday',
+    Sun: 'Sunday',
+};
+
+const shortNameMapping = Object.entries(dayNameMapping).reduce((acc, [shortName, fullName]) => {
+    acc[fullName] = shortName;
+    return acc;
+}, {} as { [key: string]: string });
 
 const daysOfWeek = [
-    { name: 'Mon' },
-    { name: 'Tue' },
-    { name: 'Wed' },
-    { name: 'Thu' },
-    { name: 'Fri' },
-    { name: 'Sat' },
-    { name: 'Sun' },
+    { shortName: 'Mon', fullName: 'Monday' },
+    { shortName: 'Tue', fullName: 'Tuesday' },
+    { shortName: 'Wed', fullName: 'Wednesday' },
+    { shortName: 'Thu', fullName: 'Thursday' },
+    { shortName: 'Fri', fullName: 'Friday' },
+    { shortName: 'Sat', fullName: 'Saturday' },
+    { shortName: 'Sun', fullName: 'Sunday' },
 ];
 
 // Helper function to map sports to icons
@@ -45,18 +61,18 @@ const DayCards: React.FC<AvailabilitySelectionProps> = ({ selectedDays, onSelect
                 Tell us which days you are free to enjoy your favorite sports!
             </Text>
             <View style={styles.dayCardContainer}>
-                {daysOfWeek.map(({ name }) => (
+                {daysOfWeek.map(({ shortName, fullName }) => (
                     <TouchableOpacity
-                        key={name}
+                        key={shortName}
                         style={[
                             styles.dayCard,
-                            selectedDays.includes(name) && styles.selectedDayCard,
+                            selectedDays.includes(fullName) && styles.selectedDayCard,
                         ]}
                         onPress={() => {
-                            if (selectedDays.includes(name)) {
-                                onSelectDays(selectedDays.filter((d) => d !== name));
+                            if (selectedDays.includes(fullName)) {
+                                onSelectDays(selectedDays.filter((day) => day !== fullName));
                             } else {
-                                onSelectDays([...selectedDays, name]);
+                                onSelectDays([...selectedDays, fullName]);
                             }
                         }}
                     >
@@ -64,27 +80,31 @@ const DayCards: React.FC<AvailabilitySelectionProps> = ({ selectedDays, onSelect
                         <Text
                             style={[
                                 styles.dayText,
-                                selectedDays.includes(name) && styles.selectedDayText,
+                                selectedDays.includes(fullName) && styles.selectedDayText,
                             ]}
                         >
-                            {name}
+                            {shortName}
                         </Text>
                         {/* Icon (Center) */}
                         <MaterialCommunityIcons
                             name={
-                                selectedDays.includes(name)
+                                selectedDays.includes(fullName)
                                     ? getSportIcon(selectedSport)
                                     : restIcon
                             }
                             size={36}
-                            color={selectedDays.includes(name) ? 'white' : '#2D3748'}
+                            color={selectedDays.includes(fullName) ? 'white' : '#2D3748'}
                             style={styles.dayIcon}
                         />
                         {/* Tick or Empty Circle Icon */}
                         <MaterialIcons
-                            name={selectedDays.includes(name) ? 'check-circle' : 'radio-button-unchecked'}
+                            name={
+                                selectedDays.includes(fullName)
+                                    ? 'check-circle'
+                                    : 'radio-button-unchecked'
+                            }
                             size={18}
-                            color={selectedDays.includes(name) ? 'white' : '#A0AEC0'}
+                            color={selectedDays.includes(fullName) ? 'white' : '#A0AEC0'}
                             style={styles.tickIcon}
                         />
                     </TouchableOpacity>

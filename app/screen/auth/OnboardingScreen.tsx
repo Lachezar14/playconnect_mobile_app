@@ -5,8 +5,10 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebaseConfig";
 import { doc, runTransaction } from "firebase/firestore";
 import SportCards from "../../components/onboarding/SportCards";
-import SkillLevelCards from "../../components/onboarding/SkillLevelCards";
 import DayCards from "../../components/onboarding/DayCards";
+import PlayerSkillAssessment from "../../components/onboarding/PlayerSkillAssessment";
+import SkillLevelCards from "../../components/onboarding/SkillLevelCards";
+import RecapPreferences from "../../components/onboarding/RecapPreferences";
 
 const Onboarding = ({ route, navigation }: any) => {
     const [step, setStep] = useState(0);  // Track the current step
@@ -14,11 +16,12 @@ const Onboarding = ({ route, navigation }: any) => {
     const [selectedDays, setSelectedDays] = useState([]);
     const [selectedSkill, setSelectedSkill] = useState('');
     const { password, email, firstName, lastName } = route.params;
+    console.log("Selected Skill: ", selectedSkill);
 
-    const totalSteps = 3; // Total number of steps in the onboarding
+    const totalSteps = 4; // Total number of steps in the onboarding
 
     const handleNext = () => {
-        if (step < 2) {
+        if (step < 3) {
             setStep(step + 1);
         } else {
             savePreferences();
@@ -92,11 +95,17 @@ const Onboarding = ({ route, navigation }: any) => {
 
             {/* Skill Level */}
             {step === 1 && (
-                <SkillLevelCards
-                    selectedSkill={selectedSkill}
-                    onSelectSkill={setSelectedSkill}
-                    selectedSport={selectedSport}
-                />
+                selectedSport === 'Tennis' ? (
+                    <PlayerSkillAssessment
+                        onSkillLevelSelect={setSelectedSkill}
+                    />
+                ) : (
+                    <SkillLevelCards
+                        selectedSkill={selectedSkill}
+                        selectedSport={selectedSport}
+                        onSelectSkill={setSelectedSkill}
+                    />
+                )
             )}
 
             {/* Availability */}
@@ -108,13 +117,22 @@ const Onboarding = ({ route, navigation }: any) => {
                 />
             )}
 
+            {/* Recap Preferences */}
+            {step === 3 && (
+                <RecapPreferences
+                    selectedSport={selectedSport}
+                    selectedSkill={selectedSkill}
+                    selectedDays={selectedDays}
+                />
+            )}
+
             {/* Back & Next Buttons */}
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                     <Text style={styles.buttonText}>Back</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                    <Text style={styles.buttonText}>{step === 2 ? 'Finish' : 'Next'}</Text>
+                    <Text style={styles.buttonText}>{step === 3 ? 'Finish' : 'Next'}</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

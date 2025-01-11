@@ -67,19 +67,19 @@ const Login: React.FC = () => {
               </TouchableOpacity>
           )}
 
-          <Text style={styles.orText}>Or continue with</Text>
+          {/*<Text style={styles.orText}>Or continue with</Text>*/}
 
-          <View style={styles.socialButtons}>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="google" size={24} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="apple" size={24} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="facebook" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
+          {/*<View style={styles.socialButtons}>*/}
+          {/*  <TouchableOpacity style={styles.socialButton}>*/}
+          {/*    <FontAwesome name="google" size={24} color="black" />*/}
+          {/*  </TouchableOpacity>*/}
+          {/*  <TouchableOpacity style={styles.socialButton}>*/}
+          {/*    <FontAwesome name="apple" size={24} color="black" />*/}
+          {/*  </TouchableOpacity>*/}
+          {/*  <TouchableOpacity style={styles.socialButton}>*/}
+          {/*    <FontAwesome name="facebook" size={24} color="black" />*/}
+          {/*  </TouchableOpacity>*/}
+          {/*</View>*/}
 
           <TouchableOpacity onPress={navigateToSignUp}>
             <Text style={styles.registerText}>
