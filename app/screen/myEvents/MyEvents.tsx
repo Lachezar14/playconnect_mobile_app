@@ -12,11 +12,13 @@ import {useAuth} from "../../context/AuthContext";
 import {Event} from "../../utilities/interfaces";
 import {useFocusEffect} from "@react-navigation/native";
 import {Feather} from "@expo/vector-icons";
-
+import {SafeAreaView} from "react-native-safe-area-context";
+import SkeletonEventCard from "../../components/event/SkeletonEventCard";
 
 const MyEvents = ({navigation} : any) => {
+    const [activeTab, setActiveTab] = useState('all');
     const [joinedEvents, setJoinedEvents] = useState<Event[]>([]);
-    const [likedEvents, setLikedEvents] = useState<Event[]>([]);
+    //const [likedEvents, setLikedEvents] = useState<Event[]>([]);
     const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -42,25 +44,25 @@ const MyEvents = ({navigation} : any) => {
         }
     }, [user]);
 
-    const handleLikedEvents = useCallback(async () => {
-        if (!user) return;
-
-        try {
-            setLoading(true);
-            const userLocation = await getUserLocation();
-            let fetchedEvents = await fetchEventsLikedByUser(user.uid);
-
-            if (userLocation) {
-                fetchedEvents = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
-            }
-
-            setLikedEvents(fetchedEvents);
-        } catch (error) {
-            console.error("Error fetching liked events: ", error);
-        } finally {
-            setLoading(false);
-        }
-    }, [user]);
+    // const handleLikedEvents = useCallback(async () => {
+    //     if (!user) return;
+    //
+    //     try {
+    //         setLoading(true);
+    //         const userLocation = await getUserLocation();
+    //         let fetchedEvents = await fetchEventsLikedByUser(user.uid);
+    //
+    //         if (userLocation) {
+    //             fetchedEvents = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
+    //         }
+    //
+    //         setLikedEvents(fetchedEvents);
+    //     } catch (error) {
+    //         console.error("Error fetching liked events: ", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, [user]);
 
     const fetchCreatedEvents = useCallback(async () => {
         if (!user) return;
@@ -85,99 +87,168 @@ const MyEvents = ({navigation} : any) => {
     useFocusEffect(
         useCallback(() => {
             fetchJoinedEvents();
-            handleLikedEvents();
             fetchCreatedEvents();
-        }, [fetchJoinedEvents, handleLikedEvents, fetchCreatedEvents])
+        }, [fetchJoinedEvents, fetchCreatedEvents])
     );
 
     const onRefresh = async () => {
         setRefreshing(true);
         await fetchJoinedEvents();
-        await handleLikedEvents();
+        await fetchCreatedEvents();
         setRefreshing(false);
     };
 
+    const TabButton = ({ title, isActive, onPress }) => (
+        <TouchableOpacity
+            onPress={onPress}
+            style={[
+                styles.tabButton,
+                isActive && styles.activeTabButton
+            ]}
+        >
+            <Text style={[
+                styles.tabButtonText,
+                isActive && styles.activeTabButtonText
+            ]}>
+                {title}
+            </Text>
+        </TouchableOpacity>
+    );
+
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>My Events</Text>
+            </View>
+
+            <View style={styles.tabContainer}>
+                <TabButton
+                    title="All"
+                    isActive={activeTab === 'all'}
+                    onPress={() => setActiveTab('all')}
+                />
+                <TabButton
+                    title="Joined"
+                    isActive={activeTab === 'joined'}
+                    onPress={() => setActiveTab('joined')}
+                />
+                <TabButton
+                    title="Created"
+                    isActive={activeTab === 'created'}
+                    onPress={() => setActiveTab('created')}
+                />
+            </View>
+
             <ScrollView
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
+                style={styles.contentContainer}
             >
-                {/* Joined Events Section */}
-                <Text style={styles.sectionTitle}>Joined Events</Text>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={true}
-                    contentContainerStyle={styles.scrollContainer}
-                >
-                    {joinedEvents.length === 0 ? (
-                        <Text style={styles.emptyText}>No joined events yet</Text>
-                    ) : (
-                        joinedEvents.map(event => (
-                            <EventCardSmall key={event.id} event={event} />
-                        ))
-                    )}
-                </ScrollView>
+                {activeTab === 'all' || activeTab === 'joined' ? (
+                    <>
+                        <Text style={styles.sectionTitle}>Joined Events</Text>
+                        <View style={styles.eventsContainer}>
+                            {loading ? (
+                                // Show multiple skeleton cards while loading
+                                Array(3).fill(0).map((_, index) => (
+                                    <SkeletonEventCard key={`skeleton-joined-${index}`} />
+                                ))
+                            ) : joinedEvents.length === 0 ? (
+                                <Text style={styles.emptyText}>No joined events yet</Text>
+                            ) : (
+                                joinedEvents.map(event => (
+                                    <EventCardSmall key={event.id} event={event} />
+                                ))
+                            )}
+                        </View>
+                    </>
+                ) : null}
 
-                {/* Created Events Section */}
-                <Text style={styles.sectionTitle}>Created Events</Text>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={true}
-                    contentContainerStyle={styles.scrollContainer}
-                >
-                    {createdEvents.length === 0 ? (
-                        <Text style={styles.emptyText}>You have not created any events yet</Text>
-                    ) : (
-                        createdEvents.map(event => (
-                            <EventCardSmall key={event.id} event={event} />
-                        ))
-                    )}
-                </ScrollView>
-
-                {/* Liked Events Section */}
-                <Text style={styles.sectionTitle}>Liked Events</Text>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={true}
-                    contentContainerStyle={styles.scrollContainer}
-                >
-                    {likedEvents.length === 0 ? (
-                        <Text style={styles.emptyText}>You have not liked any events yet</Text>
-                    ) : (
-                        likedEvents.map(event => (
-                            <EventCardSmall key={event.id} event={event} />
-                        ))
-                    )}
-                </ScrollView>
+                {activeTab === 'all' || activeTab === 'created' ? (
+                    <>
+                        <Text style={styles.sectionTitle}>Created Events</Text>
+                        <View style={styles.eventsContainer}>
+                            {loading ? (
+                                // Show multiple skeleton cards while loading
+                                Array(3).fill(0).map((_, index) => (
+                                    <SkeletonEventCard key={`skeleton-created-${index}`} />
+                                ))
+                            ) : createdEvents.length === 0 ? (
+                                <Text style={styles.emptyText}>You have not created any events yet</Text>
+                            ) : (
+                                createdEvents.map(event => (
+                                    <EventCardSmall key={event.id} event={event} />
+                                ))
+                            )}
+                        </View>
+                    </>
+                ) : null}
             </ScrollView>
 
-            {/* Circle Plus Button */}
             <TouchableOpacity
                 style={styles.fab}
                 onPress={() => navigation.navigate('CreateEvent')}
             >
                 <Feather name="plus" size={24} color="white" />
             </TouchableOpacity>
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Use flex: 1 to allow the ScrollView to take full space
-        paddingLeft: 10,
+        flex: 1,
         backgroundColor: '#fff',
     },
-    scrollContainer: {
+    header: {
+        padding: 20,
+    },
+    title: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#666',
+        lineHeight: 24,
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        marginBottom: 15,
+        gap: 10,
+    },
+    tabButton: {
+        paddingHorizontal: 20,
         paddingVertical: 10,
+        borderRadius: 20,
+        backgroundColor: '#f0f0f0',
+    },
+    activeTabButton: {
+        backgroundColor: '#38A169',
+    },
+    tabButtonText: {
+        color: '#666',
+        fontWeight: '500',
+    },
+    activeTabButtonText: {
+        color: '#fff',
+    },
+    contentContainer: {
+        flex: 1,
+        paddingHorizontal: 12,
+    },
+    eventsContainer: {
+        gap: 10,
+        marginBottom: 24,
     },
     sectionTitle: {
-        fontSize: 15,
+        fontSize: 18,
         fontWeight: 'bold',
-        marginTop: 20,
-        color: 'gray',
+        marginBottom: 16,
+        marginTop: 8,
     },
     emptyText: {
         textAlign: 'center',
@@ -192,10 +263,17 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: 'green', // Change color as needed
+        backgroundColor: '#38A169',
         alignItems: 'center',
         justifyContent: 'center',
         elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
     },
 });
 

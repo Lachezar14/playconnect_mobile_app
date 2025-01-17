@@ -3,11 +3,10 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Event } from '../../utilities/interfaces';
-import { Ionicons } from "@expo/vector-icons";
+import {Feather, Ionicons, MaterialCommunityIcons, MaterialIcons} from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { isEventLiked, likeEvent, unlikeEvent } from "../../services/userLikedEventsService";
 
-// Define the navigation stack types
 type RootStackParamList = {
     Events: undefined;
     EventDetails: { event: Event };
@@ -15,10 +14,8 @@ type RootStackParamList = {
     CreatedEventDetails: { event: Event };
 };
 
-// Define the type for navigation prop
 type EventCardNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EventDetails'>;
 
-// Card component to display event details
 interface EventCardProps {
     event: Event;
 }
@@ -28,24 +25,15 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
     const [isLiked, setIsLiked] = useState(false);
     const { user } = useAuth();
 
-    // Format the Firestore date into a Date object
     const eventDateTime = new Date(event.date);
-    const currentDate = new Date();
-    const isEventInPast = eventDateTime < currentDate;
-
-    // Format the time and date
     const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const formattedDate = eventDateTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
     useEffect(() => {
         const checkIfLiked = async () => {
             if (user) {
-                try {
-                    const liked = await isEventLiked(user.uid, event.id);
-                    setIsLiked(liked);
-                } catch (error) {
-                    console.error('Error checking if event is liked:', error);
-                }
+                const liked = await isEventLiked(user.uid, event.id);
+                setIsLiked(liked);
             }
         };
         checkIfLiked();
@@ -53,63 +41,36 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
 
     const handleLikeEvent = async () => {
         if (user) {
-            try {
-                if (isLiked) {
-                    // Unlike the event
-                    await unlikeEvent(user.uid, event.id);
-                    setIsLiked(false);
-                } else {
-                    // Like the event
-                    await likeEvent(user.uid, event.id);
-                    setIsLiked(true);
-                }
-            } catch (error) {
-                console.error('Error toggling like:', error);
+            if (isLiked) {
+                await unlikeEvent(user.uid, event.id);
+                setIsLiked(false);
+            } else {
+                await likeEvent(user.uid, event.id);
+                setIsLiked(true);
             }
         }
     };
 
-    // Navigate to the EventDetails screen with event data when card is pressed
     const handleCardPress = () => {
-        if (event.userId === user?.uid) {
-            navigation.navigate('CreatedEventDetails', { event });
-        } else if (isLiked) {
-            navigation.navigate('EventDetails', { event });
-        } else {
-            navigation.navigate('JoinedEventDetails', { event });
-        }
+        const destination =
+            event.userId === user?.uid
+                ? 'CreatedEventDetails'
+                : isLiked
+                    ? 'EventDetails'
+                    : 'JoinedEventDetails';
+        navigation.navigate(destination, { event });
     };
 
     return (
-        <TouchableOpacity onPress={handleCardPress}>
-            <View style={[styles.card, isEventInPast && styles.disabledCard]}>
-                <Image
-                    source={{ uri: event.eventImage }}
-                    style={[styles.image, isEventInPast && styles.greyedImage]}
-                />
-                {/* Icon button */}
-                <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={handleLikeEvent}
-                >
-                    <Ionicons
-                        name="heart"
-                        size={24}
-                        color={isLiked ? 'red' : 'gray'}
-                    />
-                </TouchableOpacity>
-                <View style={styles.cardContent}>
-                    <Text style={[styles.title, isEventInPast && styles.greyedText]}>{event.title}</Text>
-                    <View style={styles.row}>
-                        <Text style={[styles.time, isEventInPast && styles.greyedText]}>
-                            {formattedTime} / {formattedDate}
-                        </Text>
-                        {event.distance && (
-                            <Text style={[styles.distance, isEventInPast && styles.greyedText]}>
-                                {event.distance}
-                            </Text>
-                        )}
-                    </View>
+        <TouchableOpacity onPress={handleCardPress} style={styles.card}>
+            <Image source={{ uri: event.eventImage }} style={styles.image} />
+            <View style={styles.details}>
+                <Text style={styles.title} numberOfLines={1}>
+                    {event.title}
+                </Text>
+                <View style={styles.infoRow}>
+                    <MaterialCommunityIcons name="calendar" size={20} color="#38A169" style={styles.icon} />
+                    <Text style={styles.infoText}>{formattedDate} / {formattedTime}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -119,58 +80,47 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
 export default EventCardSmall;
 
 const styles = StyleSheet.create({
+    details: {
+        flex: 1,
+        justifyContent: 'flex-start', // Align content to the top
+    },
     card: {
+        flexDirection: 'row',
         backgroundColor: '#fff',
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        overflow: 'hidden',
+        borderColor: '#fff',
         borderWidth: 1,
-        borderColor: '#ccc', // Light gray border
-        width: 220, // Adjusted width to make it less wide
-        marginRight: 15, // Space between cards
+        borderRadius: 12,
+        padding: 10,
+        alignItems: 'flex-start', // Align card content at the top
+        shadowColor: '#000', // Shadow color
+        shadowOffset: { width: 3, height: 3 }, // Shadow offset to the right and bottom
+        shadowOpacity: 0.2, // Shadow opacity
+        shadowRadius: 5, // Shadow blur radius
+        elevation: 6, // Shadow for Android
     },
     image: {
-        width: '100%',
-        height: 150, // Adjusted height
-    },
-    cardContent: {
-        padding: 12,
-        marginVertical: 2,
+        width: 90,
+        height: 60,
+        borderRadius: 8, // Rounded image edges
+        marginRight: 16, // Space between image and text
     },
     title: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 22, // Larger title font size
+        fontWeight: '500',
         color: '#333',
+        marginBottom: 2, // Space below the title
     },
-    row: {
+    infoRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 8,
+        alignItems: 'center',
     },
-    time: {
-        fontSize: 14,
+    icon: {
+        marginRight: 4, // Space between icon and text
+    },
+    infoText: {
+        fontSize: 15,
+        fontWeight: '600',
         color: '#38A169',
     },
-    distance: {
-        fontSize: 14,
-        color: '#888',
-    },
-    greyedText: {
-        color: '#888',  // Grey text for past events
-    },
-    greyedImage: {
-        opacity: 0.5,  // Makes the image greyed-out
-    },
-    disabledCard: {
-        backgroundColor: '#e0e0e0',  // Greyed-out background for past events
-    },
-    iconButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        backgroundColor: 'transparent',
-    },
 });
+

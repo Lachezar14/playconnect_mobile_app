@@ -37,37 +37,37 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'});
     const formattedDate = eventDateTime.toLocaleDateString([], { month: 'long', day: 'numeric' });
 
-    useEffect(() => {
-        const checkIfLiked = async () => {
-            if (user) {
-                try {
-                    const liked = await isEventLiked(user.uid, event.id);
-                    setIsLiked(liked);
-                } catch (error) {
-                    console.error('Error checking if event is liked:', error);
-                }
-            }
-        };
-        checkIfLiked();
-    }, [event.id, user]);
-
-    const handleLikeEvent = async () => {
-        if (user) {
-            try {
-                if (isLiked) {
-                    // Unlike the event
-                    await unlikeEvent(user.uid, event.id); // Pass event id or doc ID
-                    setIsLiked(false);
-                } else {
-                    // Like the event
-                    await likeEvent(user.uid, event.id);
-                    setIsLiked(true);
-                }
-            } catch (error) {
-                console.error('Error toggling like:', error);
-            }
-        }
-    };
+    // useEffect(() => {
+    //     const checkIfLiked = async () => {
+    //         if (user) {
+    //             try {
+    //                 const liked = await isEventLiked(user.uid, event.id);
+    //                 setIsLiked(liked);
+    //             } catch (error) {
+    //                 console.error('Error checking if event is liked:', error);
+    //             }
+    //         }
+    //     };
+    //     checkIfLiked();
+    // }, [event.id, user]);
+    //
+    // const handleLikeEvent = async () => {
+    //     if (user) {
+    //         try {
+    //             if (isLiked) {
+    //                 // Unlike the event
+    //                 await unlikeEvent(user.uid, event.id); // Pass event id or doc ID
+    //                 setIsLiked(false);
+    //             } else {
+    //                 // Like the event
+    //                 await likeEvent(user.uid, event.id);
+    //                 setIsLiked(true);
+    //             }
+    //         } catch (error) {
+    //             console.error('Error toggling like:', error);
+    //         }
+    //     }
+    // };
 
     return (
         <TouchableOpacity
@@ -80,16 +80,16 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
                     style={[styles.image, isEventInPast && styles.greyedImage]}
                 />
                 {/* Icon button */}
-                <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={handleLikeEvent}
-                >
-                    <Ionicons
-                        name="heart"
-                        size={24}
-                        color={isLiked ? 'red' : 'gray'}
-                    />
-                </TouchableOpacity>
+                {/*<TouchableOpacity*/}
+                {/*    style={styles.iconButton}*/}
+                {/*    onPress={handleLikeEvent}*/}
+                {/*>*/}
+                {/*    <Ionicons*/}
+                {/*        name="heart"*/}
+                {/*        size={24}*/}
+                {/*        color={isLiked ? 'red' : 'gray'}*/}
+                {/*    />*/}
+                {/*</TouchableOpacity>*/}
                 <View style={styles.cardContent}>
                     <Text style={[styles.title, isEventInPast && styles.greyedText]}>{event.title}</Text>
                     <View style={styles.row}>

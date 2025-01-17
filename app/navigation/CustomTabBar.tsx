@@ -67,7 +67,7 @@ const CustomTabBar = ({
                         })}
                         <Text style={{
                             color: isFocused ? activeColor : inactiveColor,
-                            fontSize: 12,
+                            fontSize: 10,
                             marginTop: 4
                         }}>
                             {label}

@@ -27,7 +27,7 @@ export default function JoinedEventsStackScreen({ navigation, route } : any) {
                 component={MyEvents}
                 options={{
                     title: 'My Events',
-                    headerShown: true  // Change this to true
+                    headerShown: false  // Change this to true
                 }}
             />
             <MyEventsStack.Screen

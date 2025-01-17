@@ -14,11 +14,11 @@ import {useEventInvites} from "../context/EventInvitesContext";
 const Tab = createBottomTabNavigator();
 
 const tabBarHeight = Platform.select({ ios: 90, android: 70 });
-const iconSize = 24;
+const iconSize = 28;
 const activeColor = '#38A169';  // A shade of green
 const inactiveColor = '#757575';  // A medium gray
 const topSpacing = 2;
-const bottomSpacing = Platform.OS === 'ios' ? 28 : 12;  // Extra padding for iOS to account for home indicator
+const bottomSpacing = Platform.OS === 'ios' ? 28 : 2;  // Extra padding for iOS to account for home indicator
 const backgroundColor = 'white';  // Light gray background
 
 const getTabBarVisibility = (route) => {
