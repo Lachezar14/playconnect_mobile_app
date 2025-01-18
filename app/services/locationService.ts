@@ -1,15 +1,12 @@
 import * as Location from 'expo-location';
-import {doc, getDoc, updateDoc} from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../firebaseConfig';
-import {calculateDistance} from "../utilities/calcuteDistance";
+import { calculateDistance } from '../utilities/calcuteDistance';
 
 export interface UserLocation {
     latitude: number;
     longitude: number;
 }
-
-// Helper function to introduce a delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Retry logic for getting user location with permissions
 export const getUserLocation = async (maxRetries = 5): Promise<UserLocation | null> => {
@@ -18,7 +15,7 @@ export const getUserLocation = async (maxRetries = 5): Promise<UserLocation | nu
             const { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 console.log(`Location permission denied (Attempt ${attempt}/${maxRetries})`);
-                if (attempt < maxRetries) await delay(3000); // Wait 3 seconds before retrying
+                if (attempt < maxRetries) await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retrying
                 continue;
             }
 
@@ -30,7 +27,7 @@ export const getUserLocation = async (maxRetries = 5): Promise<UserLocation | nu
             };
         } catch (error) {
             console.error(`Error getting location on attempt ${attempt}:`, error);
-            if (attempt < maxRetries) await delay(3000); // Retry delay if an error occurs
+            if (attempt < maxRetries) await new Promise(resolve => setTimeout(resolve, 3000)); // Retry delay if an error occurs
         }
     }
 
@@ -39,60 +36,40 @@ export const getUserLocation = async (maxRetries = 5): Promise<UserLocation | nu
 };
 
 // Function to check if the user has moved more than 1 kilometer from the stored location
-export const isUserLocationFarEnough = async (userId: string, currentLocation: UserLocation): Promise<boolean> => {
+export const isUserLocationFarEnough = (lastLocation: UserLocation, currentLocation: UserLocation): boolean => {
+    const distance = calculateDistance(
+        lastLocation.latitude,
+        lastLocation.longitude,
+        currentLocation.latitude,
+        currentLocation.longitude
+    );
+    return distance > 1; // More than 1 km
+};
+
+// Function to save user's location in Firestore only if they have moved more than 1 kilometer
+export const saveUserLocationToFirestore = async (userId: string, currentLocation: UserLocation): Promise<void> => {
     try {
-        const userDocRef = doc(FIRESTORE_DB, 'users', userId); // Reference to the user document
+        const userDocRef = doc(FIRESTORE_DB, 'users', userId);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            const lastLatitude = userData?.latitude;
-            const lastLongitude = userData?.longitude;
+            const lastLocation: UserLocation = {
+                latitude: userData?.latitude,
+                longitude: userData?.longitude,
+            };
 
-            // If a previous location exists, calculate the distance
-            if (lastLatitude && lastLongitude) {
-                const distance = calculateDistance(
-                    lastLatitude,
-                    lastLongitude,
-                    currentLocation.latitude,
-                    currentLocation.longitude
-                );
-
-                // Return true if the user has moved more than 1 km
-                return distance > 1;
+            // If the user has moved more than 1 km, update the location in Firestore
+            if (isUserLocationFarEnough(lastLocation, currentLocation)) {
+                await updateDoc(userDocRef, {
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                    lastUpdated: new Date(),
+                });
+                console.log('User location saved to Firestore');
+            } else {
+                console.log('User location has not moved significantly, no update needed');
             }
-        }
-        // If no previous location exists, return true (since this would be the first update)
-        return true;
-    } catch (error) {
-        console.error('Error checking user location distance:', error);
-        return false;
-    }
-};
-
-// Function to save user's location in Firestore only if they have moved more than 1 kilometer
-export const saveUserLocationToFirestore = async (userId: string): Promise<void> => {
-    try {
-        const newLocation = await getUserLocation(); // Get the user's current location
-        if (!newLocation) {
-            console.log('Could not retrieve location');
-            return;
-        }
-
-        // Check if the user has moved more than 1 kilometer
-        const shouldUpdateLocation = await isUserLocationFarEnough(userId, newLocation);
-
-        if (shouldUpdateLocation) {
-            const userDocRef = doc(FIRESTORE_DB, 'users', userId); // Reference to the user document
-            await updateDoc(userDocRef, {
-                latitude: newLocation.latitude,
-                longitude: newLocation.longitude,
-                lastUpdated: new Date() // Update the last update timestamp
-            });
-
-            console.log('User location saved to Firestore successfully');
-        } else {
-            console.log('User has not moved more than 1 kilometer, location not updated');
         }
     } catch (error) {
         console.error('Error saving user location to Firestore:', error);

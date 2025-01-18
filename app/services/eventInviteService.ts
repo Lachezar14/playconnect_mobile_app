@@ -1,4 +1,4 @@
-import {addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, where} from "firebase/firestore";
+import {addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where} from "firebase/firestore";
 import {FIRESTORE_DB} from "../../firebaseConfig";
 import {EventInvite} from "../utilities/interfaces";
 import {eventJoin} from "./eventParticipationService";
@@ -53,27 +53,6 @@ export const fetchEventInvitesByUserId = async (userId: string): Promise<EventIn
     } catch (error) {
         console.error("Error fetching event invites:", error);
         throw new Error("Failed to fetch event invites");
-    }
-};
-
-// Method to fetch an event invite by ID
-export const fetchEventInviteById = async (inviteId: string): Promise<EventInvite | null> => {
-    try {
-        const eventInviteDoc = doc(FIRESTORE_DB, 'eventInvites', inviteId);
-        const inviteSnapshot = await getDoc(eventInviteDoc);
-
-        if (inviteSnapshot.exists()) {
-            return {
-                id: inviteSnapshot.id,
-                ...inviteSnapshot.data(),
-            } as unknown as EventInvite;
-        } else {
-            console.error("Event invite not found");
-            return null;
-        }
-    } catch (error) {
-        console.error("Error fetching event invite by ID:", error);
-        throw new Error("Failed to fetch event invite");
     }
 };
 

@@ -1,40 +1,62 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from "../context/AuthContext";
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
-import {saveUserLocationToFirestore} from "../services/locationService";
+import {getUserLocation, saveUserLocationToFirestore, UserLocation} from "../services/locationService";
+import * as Location from 'expo-location';
 
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
     const { user, isLoading } = useAuth();
+    const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
-    // Check if user is authenticated and
-    // check if the user has moved than a 1 kilometer,
-    // if they have - update their location in Firestore.
-    // This runs every 10 minutes.
     useEffect(() => {
-        let locationInterval: NodeJS.Timeout | null = null;
+        let locationWatcher: Location.LocationSubscription | null = null;
 
-        // Check if user is authenticated
         if (user) {
-            // Update location immediately on load
-            saveUserLocationToFirestore(user.uid);
+            // Fetch the initial user location
+            const fetchInitialLocation = async () => {
+                const location = await getUserLocation();
+                if (location) {
+                    setUserLocation(location);
+                    await saveUserLocationToFirestore(user.uid, location); // Initial location save
+                }
+            };
 
-            // Set up the interval to update location every 10 minutes
-            locationInterval = setInterval(() => {
-                saveUserLocationToFirestore(user.uid);
-            }, 600000); // 600,000 milliseconds = 10 minutes
+            fetchInitialLocation(); // Fetch user location when the user is authenticated
+
+            // Watch for real-time location updates
+            const startWatchingLocation = async () => {
+                locationWatcher = await Location.watchPositionAsync(
+                    {
+                        accuracy: Location.Accuracy.Balanced,
+                        timeInterval: 30000, // Update every 10 seconds for example
+                        distanceInterval: 100, // Update when moving at least 10 meters
+                    },
+                    async (location) => {
+                        const currentLocation = {
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude,
+                        };
+
+                        setUserLocation(currentLocation);
+                        await saveUserLocationToFirestore(user.uid, currentLocation); // Save to Firestore only if moved
+                    }
+                );
+            };
+
+            startWatchingLocation(); // Start watching the location
+
+            // Cleanup the watcher when the component unmounts or user logs out
+            return () => {
+                if (locationWatcher) {
+                    locationWatcher.remove(); // Stop watching the location when component unmounts
+                }
+            };
         }
-
-        // Clean up the interval when the component unmounts or user logs out
-        return () => {
-            if (locationInterval) {
-                clearInterval(locationInterval);
-            }
-        };
-    }, [user]); // Dependency on 'user', starts when user is authenticated
+    }, [user]); // Dependency on user, triggers when user changes
 
     if (isLoading) {
         return null; // Or return a loading component
