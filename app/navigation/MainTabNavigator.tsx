@@ -64,7 +64,7 @@ export default function MainTabNavigator() {
                 options={({ route }) => ({
                     title: 'Discover',
                     tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="compass" size={size} color={color} />,
-                    headerShown: getFocusedRouteNameFromRoute(route) !== 'EventDetails',
+                    headerShown: false,
                     tabBarStyle: { display: getTabBarVisibility(route) }
                 })}
             />
@@ -74,7 +74,7 @@ export default function MainTabNavigator() {
                 options={({ route }) => ({
                     title: 'My Events',
                     tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="calendar" size={size} color={color} />,
-                    headerShown: false,  // Remove header control from here
+                    headerShown: false,
                     tabBarStyle: { display: getTabBarVisibility(route) }
                 })}
             />

@@ -69,7 +69,7 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
                     {event.title}
                 </Text>
                 <View style={styles.infoRow}>
-                    <MaterialCommunityIcons name="calendar" size={20} color="#38A169" style={styles.icon} />
+                    <Feather name="calendar" size={20} color="#38A169" style={styles.icon} />
                     <Text style={styles.infoText}>{formattedDate} / {formattedTime}</Text>
                 </View>
             </View>
@@ -87,22 +87,22 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         backgroundColor: '#fff',
-        borderColor: '#fff',
-        borderWidth: 1,
-        borderRadius: 12,
-        padding: 10,
+        // borderColor: '#fff',
+        // borderWidth: 1,
+        // borderRadius: 12,
+        //padding: 10,
         alignItems: 'flex-start', // Align card content at the top
-        shadowColor: '#000', // Shadow color
-        shadowOffset: { width: 3, height: 3 }, // Shadow offset to the right and bottom
-        shadowOpacity: 0.2, // Shadow opacity
-        shadowRadius: 5, // Shadow blur radius
-        elevation: 6, // Shadow for Android
+        // shadowColor: '#000', // Shadow color
+        // shadowOffset: { width: 3, height: 3 }, // Shadow offset to the right and bottom
+        // shadowOpacity: 0.2, // Shadow opacity
+        // shadowRadius: 5, // Shadow blur radius
+        // elevation: 6, // Shadow for Android
     },
     image: {
-        width: 90,
-        height: 60,
+        width: 120,
+        height: 70,
         borderRadius: 8, // Rounded image edges
-        marginRight: 16, // Space between image and text
+        marginRight: 10, // Space between image and text
     },
     title: {
         fontSize: 22, // Larger title font size

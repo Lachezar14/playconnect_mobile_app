@@ -6,19 +6,17 @@ import {
     addDistanceToEvents,
     fetchEventsCreatedByUser,
     fetchEventsJoinedByUserID,
-    fetchEventsLikedByUser
 } from "../../services/eventService";
 import {useAuth} from "../../context/AuthContext";
 import {Event} from "../../utilities/interfaces";
 import {useFocusEffect} from "@react-navigation/native";
 import {Feather} from "@expo/vector-icons";
 import {SafeAreaView} from "react-native-safe-area-context";
-import SkeletonEventCard from "../../components/event/SkeletonEventCard";
+import EventCardSmallSkeleton from "../../components/event/EventCardSmallSkeleton";
 
 const MyEvents = ({navigation} : any) => {
     const [activeTab, setActiveTab] = useState('all');
     const [joinedEvents, setJoinedEvents] = useState<Event[]>([]);
-    //const [likedEvents, setLikedEvents] = useState<Event[]>([]);
     const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -43,26 +41,6 @@ const MyEvents = ({navigation} : any) => {
             setLoading(false);
         }
     }, [user]);
-
-    // const handleLikedEvents = useCallback(async () => {
-    //     if (!user) return;
-    //
-    //     try {
-    //         setLoading(true);
-    //         const userLocation = await getUserLocation();
-    //         let fetchedEvents = await fetchEventsLikedByUser(user.uid);
-    //
-    //         if (userLocation) {
-    //             fetchedEvents = addDistanceToEvents(fetchedEvents, userLocation.latitude, userLocation.longitude);
-    //         }
-    //
-    //         setLikedEvents(fetchedEvents);
-    //     } catch (error) {
-    //         console.error("Error fetching liked events: ", error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }, [user]);
 
     const fetchCreatedEvents = useCallback(async () => {
         if (!user) return;
@@ -152,7 +130,7 @@ const MyEvents = ({navigation} : any) => {
                             {loading ? (
                                 // Show multiple skeleton cards while loading
                                 Array(3).fill(0).map((_, index) => (
-                                    <SkeletonEventCard key={`skeleton-joined-${index}`} />
+                                    <EventCardSmallSkeleton key={`skeleton-joined-${index}`} />
                                 ))
                             ) : joinedEvents.length === 0 ? (
                                 <Text style={styles.emptyText}>No joined events yet</Text>
@@ -172,7 +150,7 @@ const MyEvents = ({navigation} : any) => {
                             {loading ? (
                                 // Show multiple skeleton cards while loading
                                 Array(3).fill(0).map((_, index) => (
-                                    <SkeletonEventCard key={`skeleton-created-${index}`} />
+                                    <EventCardSmallSkeleton key={`skeleton-created-${index}`} />
                                 ))
                             ) : createdEvents.length === 0 ? (
                                 <Text style={styles.emptyText}>You have not created any events yet</Text>
@@ -241,7 +219,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
     },
     eventsContainer: {
-        gap: 10,
+        gap: 20,
         marginBottom: 24,
     },
     sectionTitle: {

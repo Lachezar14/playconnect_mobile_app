@@ -1,17 +1,18 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {View, StyleSheet, RefreshControl, Animated} from 'react-native';
+import {View, StyleSheet, RefreshControl, Animated, Text, FlatList, Platform} from 'react-native';
 import EventCard from "../../components/event/EventCard";
 import SearchFilter from "../../components/filters/SearchFilter";
 import SportFilter from "../../components/filters/SportFilter";
 import {addDistanceToEvents, fetchEvents} from "../../services/eventService";
 import {getUserLocation} from "../../services/locationService";
 import {Event} from "../../utilities/interfaces";
+import {SafeAreaView} from "react-native-safe-area-context";
+import EventCardSkeleton from "../../components/event/EventCardSkeleton";
 
-const HEADER_MAX_HEIGHT = 130; // Adjust this value based on your SearchFilter height
+const HEADER_MAX_HEIGHT = 140;
 const HEADER_MIN_HEIGHT = 0;
 const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
-// Main component to render the list of events
 const Events = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
@@ -33,7 +34,6 @@ const Events = () => {
         extrapolate: 'clamp',
     });
 
-
     const loadEvents = useCallback(async () => {
         try {
             setLoading(true);
@@ -49,6 +49,7 @@ const Events = () => {
 
             const uniqueSports = Array.from(new Set(fetchedEvents.map(event => event.sportType)));
             setSports(['All', ...uniqueSports]);
+
         } catch (error) {
             console.error("Error loading events: ", error);
         } finally {
@@ -58,7 +59,7 @@ const Events = () => {
 
     useEffect(() => {
         loadEvents();
-    }, []);
+    }, [loadEvents]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -84,15 +85,13 @@ const Events = () => {
                 (!start || eventDate >= start) &&
                 (!end || eventDate <= end);
 
-            //const matchesSport = sport ? event.title.toLowerCase().includes(sport.toLowerCase()) : true;
-
             return isWithinDateRange;
         });
         setFilteredEvents(filtered);
     };
 
     const handleSportSelect = (sport: string | null) => {
-        if (sport === null) {
+        if (sport === null || sport === 'All') {
             setFilteredEvents(events);
         } else {
             const filtered = events.filter(event =>
@@ -102,49 +101,127 @@ const Events = () => {
         }
     };
 
-    const renderEventCard = ({ item }: { item: Event }) => (
-        <EventCard
-            event={item}
-            targetPage="EventDetails"
-        />
+    // Group events by sport type (based on filteredEvents)
+    const eventsBySport = filteredEvents.reduce((acc, event) => {
+        const sport = event.sportType;
+        if (!acc[sport]) {
+            acc[sport] = [];
+        }
+        acc[sport].push(event);
+        return acc;
+    }, {} as Record<string, Event[]>);
+
+    const renderHorizontalEventCard = ({ item }: { item: Event }) => (
+        <View style={styles.horizontalCardContainer}>
+            <EventCard event={item} targetPage="EventDetails" />
+        </View>
     );
 
-    return (
-        <View style={styles.container}>
-            <Animated.View style={[styles.header, { height: headerHeight, opacity: headerOpacity }]}>
-                <SearchFilter onSearch={handleSearch} onFilterApply={handleFilterApply} />
-                <SportFilter sports={sports} onSportSelect={handleSportSelect} />
-            </Animated.View>
-            <Animated.FlatList
-                contentContainerStyle={{ paddingTop: HEADER_MAX_HEIGHT }}
-                data={filteredEvents}
-                renderItem={renderEventCard}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false }
-                )}
-                scrollEventThrottle={16}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        // Move refresh control to the top of the list
-                        progressViewOffset={HEADER_MAX_HEIGHT}
-                    />
-                }
-            />
+    const renderSection = (title: string, subtitle: string, sectionEvents: Event[]) => (
+        <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{title}</Text>
+                <Text style={styles.sectionSubtitle}>{subtitle}</Text>
+            </View>
+            {loading ? (
+                // Show skeleton while loading
+                <FlatList
+                    horizontal
+                    data={Array(3).fill(0)}
+                    renderItem={() => (
+                        <View style={styles.horizontalCardContainer}>
+                            <EventCardSkeleton />
+                        </View>
+                    )}
+                    keyExtractor={(_, index) => `skeleton-${index}`}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.horizontalList}
+                />
+            ) : (
+                // Show actual events when loaded
+                <FlatList
+                    horizontal
+                    data={sectionEvents}
+                    renderItem={renderHorizontalEventCard}
+                    keyExtractor={(item) => item.id}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.horizontalList}
+                />
+            )}
         </View>
+    );
+
+    const getRecommendedEvents = () => {
+        // Logic to get recommended events - for now just return first 5
+        return filteredEvents.slice(0, 5);
+    };
+
+    return (
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <View style={styles.container}>
+                <Animated.View style={[styles.header, { height: headerHeight, opacity: headerOpacity }]}>
+                    <View style={styles.headerSearch}>
+                        <View style={styles.headerTopSpacing} />
+                        <SearchFilter onSearch={handleSearch} onFilterApply={handleFilterApply} />
+                    </View>
+                    <View style={styles.headerSports}>
+                        <SportFilter
+                            sports={sports}
+                            onSportSelect={handleSportSelect}
+                            loading={loading}
+                        />
+                    </View>
+                </Animated.View>
+
+                <Animated.ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: false }
+                    )}
+                    scrollEventThrottle={16}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            progressViewOffset={HEADER_MAX_HEIGHT}
+                        />
+                    }
+                >
+                    {/* Recommended Section */}
+                    {renderSection(
+                        "Recommended for You",
+                        "Events we think you'll love",
+                        getRecommendedEvents()
+                    )}
+
+                    {/* Render sections for each sport */}
+                    {Object.entries(eventsBySport).map(([sport, sportEvents]) => (
+                        <React.Fragment key={sport}>
+                            {renderSection(
+                                sport,
+                                `Popular ${sport} events near you`,
+                                sportEvents
+                            )}
+                        </React.Fragment>
+                    ))}
+
+                    {/* Add bottom spacing to account for tab bar */}
+                    <View style={styles.bottomSpacing} />
+                </Animated.ScrollView>
+            </View>
+        </SafeAreaView>
     );
 };
 
-export default Events;
-
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         flex: 1,
-        paddingHorizontal: 16,
         backgroundColor: '#fff',
     },
     header: {
@@ -153,48 +230,51 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         overflow: 'hidden',
-        paddingHorizontal: 16,
         backgroundColor: '#fff',
         zIndex: 1,
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+    headerSearch: {
+        paddingHorizontal: 16,
     },
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 10, // Increased for Android
-        marginBottom: 16,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: '#ccc', // Light gray border
+    headerSports: {
+        marginLeft: 16,
     },
-    image: {
-        width: '100%',
-        height: 150,
+    headerTopSpacing: {
+        height: 12, // Add space above the search bar
     },
-    cardContent: {
-        padding: 12,
+    scrollContent: {
+        paddingTop: HEADER_MAX_HEIGHT,
     },
-    title: {
-        fontSize: 18,
+    section: {
+        marginLeft: 16,
+    },
+    sectionHeader: {
+        marginBottom: 12,
+    },
+    sectionTitle: {
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: 8,
     },
-    time: {
-        fontSize: 14,
-        color: '#38A169', // Greenish text for time
-        marginBottom: 4,
+    sectionSubtitle: {
+        fontSize: 16,
+        color: '#666',
+        marginTop: 4,
     },
-    location: {
-        fontSize: 14,
-        color: '#888', // Light gray for location
+    horizontalList: {
+        paddingRight: 16,
+    },
+    horizontalCardContainer: {
+        width: 250,
+        marginRight: 16,
+    },
+    bottomSpacing: {
+        height: Platform.select({
+            ios: 90,
+            android: 70,
+            default: 0,
+        }),
     },
 });
+
+export default Events;

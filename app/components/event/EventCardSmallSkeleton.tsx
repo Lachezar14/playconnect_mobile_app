@@ -1,9 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { useEffect, useRef } from 'react';
 
-const SkeletonEventCard = () => {
-    // Animation value for the shimmer effect
+const EventCardSmallSkeleton = () => {
     const shimmerValue = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -45,21 +43,16 @@ const SkeletonEventCard = () => {
 
     return (
         <View style={styles.card}>
-            <View style={styles.imageContainer}>
-                <View style={styles.imageSkeleton} />
-                <ShimmerEffect />
-            </View>
-
+            <View style={styles.image} />
             <View style={styles.details}>
-                <View style={styles.titleContainer}>
-                    <View style={styles.titleSkeleton} />
+                <View style={styles.titleSkeleton}>
                     <ShimmerEffect />
                 </View>
-
                 <View style={styles.infoRow}>
                     <View style={styles.iconSkeleton} />
-                    <View style={styles.infoTextSkeleton} />
-                    <ShimmerEffect />
+                    <View style={styles.textSkeleton}>
+                        <ShimmerEffect />
+                    </View>
                 </View>
             </View>
         </View>
@@ -70,60 +63,42 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         backgroundColor: '#fff',
-        borderColor: '#fff',
-        borderWidth: 1,
-        borderRadius: 12,
-        padding: 10,
         alignItems: 'flex-start',
-        shadowColor: '#000',
-        shadowOffset: { width: 3, height: 3 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        elevation: 6,
-        overflow: 'hidden',
+        marginBottom: 16,
     },
-    imageContainer: {
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    imageSkeleton: {
-        width: 90,
-        height: 60,
-        borderRadius: 8,
-        marginRight: 16,
+    image: {
+        width: 120,
+        height: 70,
         backgroundColor: '#E2E8F0',
+        borderRadius: 8,
+        marginRight: 10,
     },
     details: {
         flex: 1,
         justifyContent: 'flex-start',
     },
-    titleContainer: {
-        position: 'relative',
-        overflow: 'hidden',
-        marginBottom: 2,
-    },
     titleSkeleton: {
-        height: 22,
-        width: '80%',
+        width: '60%',
+        height: 18,
         backgroundColor: '#E2E8F0',
         borderRadius: 4,
+        marginBottom: 8,
     },
     infoRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        position: 'relative',
-        overflow: 'hidden',
+        marginTop: 4,
     },
     iconSkeleton: {
         width: 20,
         height: 20,
-        borderRadius: 10,
         backgroundColor: '#E2E8F0',
+        borderRadius: 4,
         marginRight: 4,
     },
-    infoTextSkeleton: {
+    textSkeleton: {
         width: '40%',
-        height: 15,
+        height: 14,
         backgroundColor: '#E2E8F0',
         borderRadius: 4,
     },
@@ -137,4 +112,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SkeletonEventCard;
+export default EventCardSmallSkeleton;

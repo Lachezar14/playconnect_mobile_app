@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { Animated, View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 
 interface SportFilterProps {
     sports: string[];
     onSportSelect: (sport: string | null) => void;
+    loading?: boolean;
 }
 
-const SportFilter: React.FC<SportFilterProps> = ({ sports, onSportSelect }) => {
+const SportFilter: React.FC<SportFilterProps> = ({ sports, onSportSelect, loading = false }) => {
     const [selectedSport, setSelectedSport] = useState<string | null>(null);
     const [orderedSports, setOrderedSports] = useState<string[]>(sports);
 
@@ -48,13 +49,19 @@ const SportFilter: React.FC<SportFilterProps> = ({ sports, onSportSelect }) => {
         );
     };
 
+    const renderSkeletonButton = ({ item }: { item: number }) => (
+        <Animated.View style={[styles.sportButton, styles.skeletonButton]}>
+            <View style={styles.skeletonText} />
+        </Animated.View>
+    );
+
     return (
         <View style={styles.container}>
             <FlatList
                 horizontal
-                data={orderedSports}
-                renderItem={renderSportButton}
-                keyExtractor={(item) => item}
+                data={loading ? Array(5).fill(0) : orderedSports}
+                renderItem={loading ? renderSkeletonButton : renderSportButton}
+                keyExtractor={(item, index) => loading ? `skeleton-${index}` : item.toString()}
                 showsHorizontalScrollIndicator={false}
                 extraData={selectedSport}
             />
@@ -62,8 +69,7 @@ const SportFilter: React.FC<SportFilterProps> = ({ sports, onSportSelect }) => {
     );
 };
 
-export default SportFilter;
-
+// Add these new styles
 const styles = StyleSheet.create({
     container: {
         marginBottom: 16,
@@ -89,4 +95,18 @@ const styles = StyleSheet.create({
     selectedText: {
         color: '#FFF',
     },
+    // New skeleton styles
+    skeletonButton: {
+        backgroundColor: '#F0F0F0',
+        width: 80, // Fixed width for skeleton
+        justifyContent: 'center',
+    },
+    skeletonText: {
+        height: 14,
+        width: '60%',
+        backgroundColor: '#E0E0E0',
+        borderRadius: 4,
+    },
 });
+
+export default SportFilter;
