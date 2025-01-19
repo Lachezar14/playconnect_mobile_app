@@ -1,9 +1,8 @@
-import React, {useState} from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Event } from '../../utilities/interfaces';
-import {useAuth} from "../../context/AuthContext";
 
 // Define the navigation stack types
 type RootStackParamList = {
@@ -13,7 +12,7 @@ type RootStackParamList = {
 };
 
 // Define the type for navigation prop
-type EventCardNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EventDetails'>;
+type EventCardSearchNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EventDetails'>;
 
 // Card component to display event details
 interface EventCardProps {
@@ -21,10 +20,8 @@ interface EventCardProps {
     targetPage: 'EventDetails' | 'JoinedEventsDetails';
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
-    const navigation = useNavigation<EventCardNavigationProp>();
-    const [isLiked, setIsLiked] = useState(false);
-    const { user } = useAuth();
+const EventCardSearch: React.FC<EventCardProps> = ({ event, targetPage }) => {
+    const navigation = useNavigation<EventCardSearchNavigationProp>();
 
     // Format the Firestore date into a Date object
     const eventDateTime = new Date(event.date);
@@ -63,7 +60,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     );
 };
 
-export default EventCard;
+export default EventCardSearch;
 
 const styles = StyleSheet.create({
     card: {
@@ -74,7 +71,7 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 120,
+        height: 150,
         borderRadius: 8, // Rounded image edges
         marginRight: 16, // Space between image and text
     },

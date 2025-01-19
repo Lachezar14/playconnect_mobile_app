@@ -1,8 +1,7 @@
 // components/EventCard.tsx
 import React from 'react';
-import {View, Text, StyleSheet, ImageBackground, Dimensions, Platform, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, ImageBackground, Dimensions, Platform} from 'react-native';
 import { Event } from '../../utilities/interfaces';
-import {SafeAreaView} from "react-native-safe-area-context";
 import {Feather} from "@expo/vector-icons";
 
 interface EventCardProps {

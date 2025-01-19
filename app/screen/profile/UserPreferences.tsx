@@ -4,10 +4,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { fetchUserById, updateUserPreferences } from "../../services/userService";
 
-// List of sports to choose from
-//const sportsList = ['Basketball', 'Football', 'Tennis', 'Padel', 'Volleyball'];
-// Skill levels
-const skillLevels = ['Beginner', 'Intermediate', 'Professional'];
 // Days of the week
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -102,8 +98,10 @@ const UserPreferences = () => {
 
     return (
         <View style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Favorite Sports Section */}
                 <View style={styles.section}>
                     <Text style={styles.title}>Favorite Sport</Text>

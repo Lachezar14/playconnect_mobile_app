@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Event } from '../../utilities/interfaces';
-import {Feather, Ionicons, MaterialCommunityIcons, MaterialIcons} from "@expo/vector-icons";
+import {Feather} from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { isEventLiked, likeEvent, unlikeEvent } from "../../services/userLikedEventsService";
 
@@ -70,7 +70,7 @@ const EventCardSmall: React.FC<EventCardProps> = ({ event }) => {
                 </Text>
                 <View style={styles.infoRow}>
                     <Feather name="calendar" size={20} color="#38A169" style={styles.icon} />
-                    <Text style={styles.infoText}>{formattedDate} / {formattedTime}</Text>
+                    <Text style={styles.infoText}>{formattedDate}, {formattedTime}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -87,16 +87,7 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         backgroundColor: '#fff',
-        // borderColor: '#fff',
-        // borderWidth: 1,
-        // borderRadius: 12,
-        //padding: 10,
         alignItems: 'flex-start', // Align card content at the top
-        // shadowColor: '#000', // Shadow color
-        // shadowOffset: { width: 3, height: 3 }, // Shadow offset to the right and bottom
-        // shadowOpacity: 0.2, // Shadow opacity
-        // shadowRadius: 5, // Shadow blur radius
-        // elevation: 6, // Shadow for Android
     },
     image: {
         width: 120,
