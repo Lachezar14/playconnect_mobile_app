@@ -13,15 +13,18 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const auth = FIREBASE_AUTH;
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const signIn = async () => {
     setLoading(true);
+    setErrorMessage(''); // Clear error message before attempting sign-in
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
       console.log(response);
-    } catch (error) {
+    } catch (error: any) {
+      setErrorMessage("Invalid email or password. Please try again.");
       console.log(error);
     } finally {
       setLoading(false);
@@ -39,7 +42,6 @@ const Login: React.FC = () => {
           <Text style={styles.subtitle}>
             Organize your life, boost your productivity, and achieve your goals with TaskMaster. Sign in to get started or create a new account.
           </Text>
-
           <TextInput
               value={email}
               style={styles.input}
@@ -58,6 +60,11 @@ const Login: React.FC = () => {
             />
             <FontAwesome name="eye-slash" size={24} color="gray" style={styles.eyeIcon} />
           </View>
+          {errorMessage &&
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+          }
 
           {loading ? (
               <ActivityIndicator size="large" color="blue" />
@@ -177,5 +184,15 @@ const styles = StyleSheet.create({
   registerLink: {
     color: '#38A169',
     fontWeight: 'bold',
+  },
+    errorContainer: {
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
   },
 });

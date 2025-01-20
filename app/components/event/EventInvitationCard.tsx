@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
-import {Feather} from "@expo/vector-icons";
+import {Feather, MaterialCommunityIcons} from "@expo/vector-icons";
 import {User, Event} from "../../utilities/interfaces";
 import {fetchUserById} from "../../services/userService";
 import {fetchEventById} from "../../services/eventService";
@@ -86,8 +86,8 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId
 
         const eventDateTime = new Date(date);
         const formattedTime = eventDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const formattedDate = eventDateTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-        return `${formattedTime} / ${formattedDate}`;
+        const formattedDate = eventDateTime.toLocaleDateString([], { day: 'numeric', month: 'short' });
+        return `${formattedDate}, ${formattedTime}`;
     };
 
     // Utility function to capitalize the first letter of a string
@@ -117,15 +117,24 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId
             </View>
 
             {/* Header: Inviter's avatar and name */}
-            <View style={styles.inviterContainer}>
-                <Image
-                    style={styles.profileImage}
-                    source={{ uri: creator?.profilePicture }}
-                />
-                <Text style={styles.inviterName}>{creator?.firstName} {creator?.lastName}</Text>
-            </View>
+                <View style={styles.inviterContainer}>
+                    <Image
+                        style={styles.profileImage}
+                        source={{ uri: creator?.profilePicture }}
+                    />
+                    <View>
+                        <Text style={styles.inviterName}>
+                            {creator?.firstName} {creator?.lastName}
+                        </Text>
+                        {/* Small grey text below the name */}
+                        <Text style={styles.invitedText}>
+                            has invited you to
+                        </Text>
+                    </View>
+                </View>
 
-            {/* Main Content: Event image and details */}
+
+                {/* Main Content: Event image and details */}
             <View style={styles.mainContent}>
                 <Image
                     source={{ uri: event?.eventImage }}
@@ -148,16 +157,18 @@ const EventInvitationCard: React.FC<EventInvitationCardProps> = ({ eventInviteId
             </View>
 
             {/* Conditional Rendering for Buttons based on EventInvite Status */}
-            {eventInvite?.status === 'pending' ? (
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.viewButton} onPress={handleAccept}>
-                        <Text style={styles.buttonText}>Accept</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.declineButton} onPress={handleDecline}>
-                        <Text style={styles.buttonTextDecline}>Decline</Text>
-                    </TouchableOpacity>
-                </View>
-            ) : null }
+                {eventInvite?.status === 'pending' ? (
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
+                            <MaterialCommunityIcons name="check" size={20} color="#fff" />
+                            <Text style={styles.buttonText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.declineButton} onPress={handleDecline}>
+                            <MaterialCommunityIcons name="close" size={20} color="#E53E3E" />
+                            <Text style={styles.buttonTextDecline}>Decline</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null }
             </TouchableOpacity>
         </View>
     );
@@ -168,11 +179,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 10,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-        marginTop: 12,
         marginHorizontal: 10,
     },
     inviterContainer: {
@@ -185,6 +191,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#38A169',
+    },
+    invitedText: {
+        marginLeft: 8,
+        fontSize: 12,
+        color: '#666', // Change this to any grey you prefer
+        marginTop: 2, // Adjust if necessary to bring it closer
     },
     mainContent: {
         flexDirection: 'row',
@@ -218,45 +230,46 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 50,
-        borderWidth: 2,
-        borderColor: '#6C63FF',
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 12,
     },
-    viewButton: {
+    acceptButton: {
         backgroundColor: '#38A169',
         padding: 10,
         borderRadius: 25,
         flex: 1,
         marginRight: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
     },
     declineButton: {
-        backgroundColor: '#F1F4F8',
+        backgroundColor: '#fff',
+        borderWidth: 2,
+        borderColor: '#E53E3E',
         padding: 10,
         borderRadius: 25,
         flex: 1,
-    },
-    myEventsButton: {
-        backgroundColor: '#38A169',
-        padding: 10,
-        borderRadius: 25,
-        width: '100%',
-        textAlign: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
     },
     buttonText: {
         color: '#fff',
         fontSize: 16,
         textAlign: 'center',
         fontWeight: 'bold',
+        marginLeft: 8,
     },
     buttonTextDecline: {
-        color: '#605f5f',
+        color: '#E53E3E',
         fontSize: 16,
         textAlign: 'center',
         fontWeight: 'bold',
+        marginLeft: 8,
     },
     declinedText: {
         color: '#605f5f',
@@ -267,7 +280,7 @@ const styles = StyleSheet.create({
     },
     badge: {
         position: 'absolute',
-        top: 10,
+        top: 2,
         right: 10,
         paddingHorizontal: 8,
         paddingVertical: 4,

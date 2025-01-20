@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {View, TextInput, Button, StyleSheet, Text, Alert, ScrollView, TouchableOpacity} from 'react-native';
+import {View, TextInput, StyleSheet, Text, Alert, TouchableOpacity} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,7 @@ import {getDayOfWeek} from "../../utilities/getDayOfWeek";
 import {addEventInvite} from "../../services/eventInviteService";
 import { Dropdown } from 'react-native-element-dropdown';
 import {SafeAreaView} from "react-native-safe-area-context";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
 
 const skillLevelOptions = [
     { label: 'Beginner', value: 'Beginner' },
@@ -165,7 +166,7 @@ const CreateEvent = () => {
 
     // Navigation between steps
     const nextStep = () => {
-        if (currentStep < 3) {
+        if (currentStep < 4) {
             setCurrentStep(currentStep + 1);
         } else {
             handleCreateEvent();
@@ -180,10 +181,21 @@ const CreateEvent = () => {
 
     // Render the current step
     const renderStep = () => {
+        const renderStepHeader = (title, description) => (
+            <View style={styles.section}>
+                <Text style={styles.heading}>{title}</Text>
+                <Text style={styles.subheading}>{description}</Text>
+            </View>
+        );
+
         switch (currentStep) {
             case 1:
                 return (
                     <View>
+                        {renderStepHeader(
+                            "Let's name your event!",
+                            "Start with the basics - give your event a catchy title and tell people what it's all about."
+                        )}
                         <Text style={styles.label}>Event Title</Text>
                         <TextInput
                             style={styles.input}
@@ -198,6 +210,15 @@ const CreateEvent = () => {
                             onChangeText={setDescription}
                             placeholder="Enter description"
                         />
+                    </View>
+                );
+            case 2:
+                return (
+                    <View>
+                        {renderStepHeader(
+                            "What's your sport?",
+                            "Tell us about the activity and who should join - we'll help find the perfect match!"
+                        )}
                         <Text style={styles.label}>Sport Type</Text>
                         <Dropdown
                             style={styles.dropdown}
@@ -236,9 +257,13 @@ const CreateEvent = () => {
                         />
                     </View>
                 );
-            case 2:
+            case 3:
                 return (
                     <View>
+                        {renderStepHeader(
+                            "When are we playing?",
+                            "Pick a date and time that works best for your activity."
+                        )}
                         <Text style={styles.label}>Event Date</Text>
                         <TouchableOpacity style={styles.selectButton} onPress={() => setShowDatePicker(true)}>
                             <Text style={styles.dateButtonText}>{date ? moment(date).format('YYYY-MM-DD') : 'Pick Date'}</Text>
@@ -266,9 +291,13 @@ const CreateEvent = () => {
                         )}
                     </View>
                 );
-            case 3:
+            case 4:
                 return (
                     <View>
+                        {renderStepHeader(
+                            "Where's the meet-up?",
+                            "Help others find your event by setting the location."
+                        )}
                         <Text style={styles.label}>Location</Text>
                         <LocationInput
                             setLocation={setLocation}
@@ -284,6 +313,24 @@ const CreateEvent = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            {/*<View style={styles.header}>*/}
+            {/*    <Text style={styles.title}>Create Event</Text>*/}
+            {/*    <TouchableOpacity*/}
+            {/*        style={styles.closeButton}*/}
+            {/*        onPress={() => navigation.goBack()}*/}
+            {/*    >*/}
+            {/*        <MaterialCommunityIcons name={'close'} size={24} color={'#333'} />*/}
+            {/*    </TouchableOpacity>*/}
+            {/*</View>*/}
+            {/* Progress Bar */}
+            <View style={styles.progressBarContainer}>
+                <View
+                    style={[
+                        styles.progressBar,
+                        { width: `${(currentStep / 4) * 100}%` }
+                    ]}
+                />
+            </View>
             {renderStep()}
 
             <View style={styles.buttonContainer}>
@@ -298,11 +345,11 @@ const CreateEvent = () => {
                 )}
                 <TouchableOpacity style={styles.nextButton} onPress={nextStep}>
                     <Text style={styles.buttonText}>
-                        {currentStep === 3 ? 'Submit' : 'Next'}
+                        {currentStep === 4 ? 'Submit' : 'Next'}
                     </Text>
                 </TouchableOpacity>
             </View>
-            {/* Invite User Modal */}
+
             <UserInviteModal
                 isVisible={isModalVisible}
                 onClose={closeModal}
@@ -316,6 +363,19 @@ const CreateEvent = () => {
 export default CreateEvent;
 
 const styles = StyleSheet.create({
+    header: {
+        marginBottom: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    closeButton: {
+        padding: 8,
+    },
+    title: {
+        fontSize: 32,
+        fontWeight: 'bold',
+    },
     label: {
         fontSize: 16,
         fontWeight: 'bold',
@@ -409,5 +469,46 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
+    },
+    stepHeader: {
+        marginBottom: 24,
+    },
+    stepTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 8,
+    },
+    stepDescription: {
+        fontSize: 16,
+        color: '#666',
+        lineHeight: 22,
+    },
+    section: {
+        marginTop: 20,
+        marginBottom: 24,
+    },
+    heading: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1A202C',
+        marginBottom: 8,
+    },
+    subheading: {
+        fontSize: 16,
+        color: '#4A5568',
+        lineHeight: 24,
+        marginBottom: 20,
+    },
+    progressBarContainer: {
+        height: 6,
+        backgroundColor: '#E2E8F0',
+        borderRadius: 3,
+        overflow: 'hidden',
+        marginBottom: 20,
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#38A169',
     },
 });

@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import {useAuth} from "./AuthContext";
 import {EventInvite} from "../utilities/interfaces";
-import {fetchEventInvitesByUserId} from "../services/eventInviteService";
 import {onSnapshot, collection, query, where} from "firebase/firestore";
 import {FIRESTORE_DB} from "../../firebaseConfig";
 
@@ -40,6 +39,7 @@ export const EventInvitesProvider: React.FC<EventInvitesProviderProps> = ({ chil
                 unsubscribe = onSnapshot(invitesQuery, (snapshot) => {
                     const updatedInvites: EventInvite[] = snapshot.docs.map(doc => {
                         const data = doc.data();
+                        console.log("invitedAt:", data.invitedAt); // Log the invitedAt field
                         return {
                             id: doc.id,
                             eventId: data.eventId,
@@ -47,6 +47,7 @@ export const EventInvitesProvider: React.FC<EventInvitesProviderProps> = ({ chil
                             invitedUserId: data.invitedUserId,
                             status: data.status,
                             createdAt: data.createdAt,
+                            invitedAt: data.invitedAt, // Ensure invitedAt is included
                         };
                     });
 

@@ -26,7 +26,7 @@ export default function InvitationsStack({navigation, route}: any) {
             <Stack.Screen
                 name="EventInvitations"
                 component={EventInvitations}
-                options={{ title: 'Invitations' }}
+                options={{ title: 'Invitations', headerShown: false }}
             />
             <Stack.Screen
                 name="InvitedEventDetails"

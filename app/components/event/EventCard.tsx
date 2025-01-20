@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Event } from '../../utilities/interfaces';
-import {useAuth} from "../../context/AuthContext";
+import {Feather, MaterialCommunityIcons} from "@expo/vector-icons";
 
 // Define the navigation stack types
 type RootStackParamList = {
@@ -23,8 +23,6 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
     const navigation = useNavigation<EventCardNavigationProp>();
-    const [isLiked, setIsLiked] = useState(false);
-    const { user } = useAuth();
 
     // Format the Firestore date into a Date object
     const eventDateTime = new Date(event.date);
@@ -47,10 +45,19 @@ const EventCard: React.FC<EventCardProps> = ({ event, targetPage }) => {
                 />
                 <View style={styles.cardContent}>
                     <Text style={[styles.title, isEventInPast && styles.greyedText]}>{event.title}</Text>
-                    <View style={styles.row}>
-                        <Text style={[styles.time, isEventInPast && styles.greyedText]}>
-                            {formattedDate}, {formattedTime}
+                    <View style={styles.iconTextRow}>
+                        <Feather name="activity" size={16} color={isEventInPast ? '#888' : '#38A169'} />
+                        <Text style={[styles.sport, isEventInPast && styles.greyedText]}>
+                            {event.sportType}
                         </Text>
+                    </View>
+                    <View style={styles.row}>
+                        <View style={styles.iconTextRow}>
+                            <Feather name="calendar" size={16} color={isEventInPast ? '#888' : '#38A169'} />
+                            <Text style={[styles.time, isEventInPast && styles.greyedText]}>
+                                {formattedDate}, {formattedTime}
+                            </Text>
+                        </View>
                         {event.distance && (
                             <Text style={[styles.distance, isEventInPast && styles.greyedText]}>
                                 {event.distance}
@@ -69,47 +76,58 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
         marginBottom: 16,
-        overflow: 'hidden', // Keeps the layout clean
-        // No border or shadow
+        overflow: 'hidden',
     },
     image: {
         width: '100%',
         height: 120,
-        borderRadius: 8, // Rounded image edges
-        marginRight: 16, // Space between image and text
+        borderRadius: 8,
     },
     cardContent: {
         paddingVertical: 8,
-        backgroundColor: 'white', // Ensures the content does not overlap the image
+        backgroundColor: 'white',
     },
     title: {
         fontSize: 20,
         fontWeight: '600',
         color: '#333',
+        marginBottom: 2,
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         marginTop: 4,
     },
     time: {
         fontSize: 14,
         color: '#38A169',
-        fontWeight: '600',
+        fontWeight: '500',
+        marginLeft: 4,
     },
     distance: {
         fontSize: 14,
         color: '#888',
-        marginRight: 8,
         fontWeight: '600',
+        marginRight: 8,
+    },
+    sport: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+        marginLeft: 4, // Space between icon and text
     },
     greyedText: {
-        color: '#888',  // Grey text for past events
+        color: '#888',
     },
     greyedImage: {
-        opacity: 0.5,  // Grey out the image for past events
+        opacity: 0.5,
     },
     disabledCard: {
-        backgroundColor: '#e0e0e0',  // Greyed-out background for past events
+        backgroundColor: '#e0e0e0',
+    },
+    iconTextRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 });

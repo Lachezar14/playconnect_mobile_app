@@ -109,13 +109,18 @@ export const fetchEventsJoinedByUserID = async (userId: string): Promise<Event[]
         }
 
         const events = await fetchEventsByIds(eventIds);
-        console.log(`fetchEventsJoinedByUserID - Database calls: ${dbCounter.getCount()}, Events fetched: ${events.length}`);
-        return events;
+
+        // Filter out events created by the same user
+        const filteredEvents = events.filter(event => event.userId !== userId);
+
+        console.log(`fetchEventsJoinedByUserID - Database calls: ${dbCounter.getCount()}, Events fetched: ${filteredEvents.length}`);
+        return filteredEvents;
     } catch (error) {
         console.error("Error fetching events joined by user:", error);
         return [];
     }
 };
+
 
 // Fetch events liked by user
 export const fetchEventsLikedByUser = async (userId: string): Promise<Event[]> => {
